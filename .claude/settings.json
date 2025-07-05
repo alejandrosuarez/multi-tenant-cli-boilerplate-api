@@ -1,0 +1,23 @@
+{
+  "cliAgent": "Claude",
+  "delegateSettingsTo": ".cli/settings.json",
+  "overrides": {
+    "contextFileName": "docs/CLI_CONTEXT.md",
+    "defaultBranch": "main",
+    "devBranch": "dev",
+    "permissions": {
+      "canAutocorrectDocs": false,
+      "canGenerateSQLHeaders": true,
+      "canInitGit": false,
+      "canRunCommands": [
+        "npm run dev",
+        "supabase db push"
+      ]
+    },
+    "audit": {
+      "trackCommits": true,
+      "requireConfirmationOnProdPush": false
+    }
+  },
+  "notes": "Claude CLI will defer to .cli/settings.json for architecture logic but limit its command execution scope."
+}

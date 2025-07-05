@@ -1,0 +1,59 @@
+{
+  "cliAgent": "Universal",
+  "contextFileName": "docs/CLI_CONTEXT.md",
+  "onboardingFileName": "docs/onboarding.md",
+  "migrationPath": "src/db/migrations/",
+  "envTemplatePath": "docs/setup.md",
+  "defaultBranch": "main",
+  "devBranch": "dev",
+  "versionCookie": "app_version_cookie",
+
+  "permissions": {
+    "canAutocorrectDocs": true,
+    "canGenerateSQLHeaders": true,
+    "canInitGit": true,
+    "canRunCommands": [
+      "npm install",
+      "npm run dev",
+      "supabase db push",
+      "vercel deploy"
+    ],
+    "canApplySQLToDev": true,
+    "canPatchEnvFiles": true,
+    "canTrackChanges": true
+  },
+
+  "audit": {
+    "trackCommits": true,
+    "requireConfirmationOnProdPush": true,
+    "tagGeneratedFiles": true
+  },
+
+  "schemaMap": {
+    "main": "public",
+    "dev": "dev"
+  },
+
+  "observability": {
+    "useSentry": true,
+    "sentryEnvVar": "SENTRY_ENV",
+    "frontendDSNKey": "NEXT_PUBLIC_SENTRY_DSN",
+    "backendDSNKey": "SENTRY_DSN_BACKEND"
+  },
+
+  "routing": {
+    "cookieName": "app_version_cookie",
+    "defaultCookieValue": "main"
+  },
+
+  "linting": {
+    "enforceSQLHeaders": true,
+    "autoInjectHeaders": true,
+    "headerTemplate": {
+      "@version": "autodetect from roadmap",
+      "@description": "autodetect from file name",
+      "@created_by": "Universal CLI",
+      "@generated_at": "ISO timestamp"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "contextFileName": "docs/CLI_CONTEXT.md",
+  "delegateSettingsTo": ".cli/settings.json",
+  "theme": "GitHub",
+  "autoAccept": true,
+  "fileFiltering": {
+    "respectGitIgnore": true,
+    "enableRecursiveFileSearch": true
+  }
+}
