@@ -25,11 +25,12 @@ This project is a scalable, multi-tenant API system built to manage entities, at
 Documentation is located at `docs/`. Review and validate all specs before development begins in `src/`.
 
 ## 📁 Directory Structure
+```
 www/                          # Project root
 ├── README.md                 # Entry point, links to docs/
 ├── docs/                     # Full documentation set
 │   ├── CLI_CONTEXT.md        # Universal CLI context file
-    ├── onboarding.md         # The very first touchpoint Gemini and Contributors alignment
+│   ├── onboarding.md         # The very first touchpoint Gemini and Contributors alignment
 │   ├── setup.md              # Local + Vercel deployment guide
 │   ├── deployment.md         # Deployment & Versioning Strategy
 │   ├── auth.md               # Clerk integration and session handling
@@ -46,6 +47,7 @@ www/                          # Project root
 │   └── settings.json         # Universal CLI settings file
 ├── src/                      # Your backend codebase (to be added)
 │   └── ...                   # API routes, DB logic, etc.
+```
 
 ## 🤖 Universal CLI Support
 Universal CLI is configured to use `docs/CLI_CONTEXT.md`. For AI-guided development, run Universal CLI inside the `www/` folder.
