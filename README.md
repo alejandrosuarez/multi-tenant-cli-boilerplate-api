@@ -51,5 +51,10 @@ www/                          # Project root
 Universal CLI is configured to use `docs/CLI_CONTEXT.md`. For AI-guided development, run Universal CLI inside the `www/` folder.
 
 ## 🔁 Cross-AI CLI Compatibility
-This project supports architecture-aware CLI agents such as Gemini CLI, Claude CLI, and other AI toolchains with environment and deployment permissions.
-The CLI onboarding, version control, cookie routing, and SQL migration logic is shared via docs/CLI_CONTEXT.md and fully reusable by any agent with contextual alignment
+
+This system supports Gemini CLI, Claude CLI, and future intelligent agents with contextual permissions.  
+All orchestration flows are defined in `docs/CLI_CONTEXT.md` and governed by `.cli/settings.json`.
+
+Current agent configs:
+- `.gemini/settings.json` → delegates to `.cli/settings.json`
+- `.claude/settings.json` → delegates with permission overrides
