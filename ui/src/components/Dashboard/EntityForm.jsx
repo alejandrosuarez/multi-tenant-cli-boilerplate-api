@@ -4,10 +4,11 @@ import { Form, Button, Card, Row, Col, Spinner, Alert } from 'react-bootstrap';
 
 const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
     entity_type: '',
-    attributes: {}
+    attributes: {
+      name: '',
+      description: ''
+    }
   });
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -33,12 +34,15 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
       const category = categories.find(cat => cat.name === entity.entity_type);
       const mergedAttributes = category ? { ...category.base_schema, ...entity.attributes } : entity.attributes;
 
-      setFormData({
-        name: entity.name || '',
-        description: entity.description || '',
+      setFormData(prev => ({
+        ...prev,
         entity_type: entity.entity_type || '',
-        attributes: mergedAttributes || {}
-      });
+        attributes: {
+          ...mergedAttributes || {},
+          name: entity.name || '',
+          description: entity.description || ''
+        }
+      }));
       setSelectedCategory(entity.entity_type || '');
       console.log('EntityForm useEffect: formData set to', { name: entity.name || '', description: entity.description || '', entity_type: entity.entity_type || '', attributes: mergedAttributes || {} });
     }
@@ -64,8 +68,6 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
 
     try {
       const entityData = {
-        name: formData.name,
-        description: formData.description,
         entity_type: formData.entity_type,
         attributes: formData.attributes
       };
@@ -109,7 +111,10 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      attributes: {
+        ...prev.attributes,
+        [name]: value
+      }
     }));
   };
 

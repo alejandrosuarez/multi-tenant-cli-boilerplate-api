@@ -26,12 +26,12 @@ const ListingCard = ({ entity }) => {
       )}
 
       <Card.Body className="d-flex flex-column">
-        <Card.Title className="mb-2">{entity.name || 'Unnamed Entity'}</Card.Title>
+        <Card.Title className="mb-2">{entity.attributes.name || 'Unnamed Entity'}</Card.Title>
         <Card.Subtitle className="mb-2 text-muted">
           Type: <Badge bg="info">{entity.entity_type || 'N/A'}</Badge>
         </Card.Subtitle>
         <Card.Text className="mb-3 flex-grow-1">
-          {entity.description || 'No description provided.'}
+          {entity.attributes.description || 'No description provided.'}
         </Card.Text>
 
         <div className="mt-auto pt-3 border-top">

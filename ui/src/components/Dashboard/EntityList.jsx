@@ -54,7 +54,7 @@ const EntityList = ({ entities, onEdit, onDelete, tenantId }) => {
             <Card.Body className="d-flex flex-column">
               <div className="d-flex justify-content-between align-items-start mb-3">
                 <div className="flex-grow-1">
-                  <Card.Title className="mb-2">{entity.name || 'Unnamed Entity'}</Card.Title>
+                  <Card.Title className="mb-2">{entity.attributes.name || 'Unnamed Entity'}</Card.Title>
                   
                   {entity.entity_type && (
                     <div className="mb-2">
@@ -62,8 +62,8 @@ const EntityList = ({ entities, onEdit, onDelete, tenantId }) => {
                     </div>
                   )}
                   
-                  {entity.description && (
-                    <Card.Text className="text-muted mb-2">{entity.description}</Card.Text>
+                  {entity.attributes.description && (
+                    <Card.Text className="text-muted mb-2">{entity.attributes.description}</Card.Text>
                   )}
                   
                   {entity.attributes && Object.keys(entity.attributes).length > 0 && (
