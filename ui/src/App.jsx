@@ -45,7 +45,7 @@ function App() {
   }
 
   return (
-    <div className="App">
+    <div className="page-container">
       {user ? (
         <Dashboard user={user} onLogout={handleLogout} />
       ) : (
