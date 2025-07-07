@@ -14,10 +14,11 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    console.log('EntityForm useEffect: entity prop changed', entity);
     const fetchCategories = async () => {
       try {
         const response = await categoriesAPI.getAll(tenantId);
-        setCategories(response.data.categories);
+        setCategories(response.data.categories || []);
       } catch (error) {
         console.error('Error fetching categories:', error);
       }
@@ -33,6 +34,7 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
         attributes: entity.attributes || {}
       });
       setSelectedCategory(entity.entity_type || '');
+      console.log('EntityForm useEffect: formData set to', { name: entity.name || '', description: entity.description || '', entity_type: entity.entity_type || '', attributes: entity.attributes || {} });
     }
   }, [entity, tenantId]);
 
