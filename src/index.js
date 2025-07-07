@@ -313,19 +313,11 @@ fastify.get('/api/categories', {
     const tenantId = auth.getTenantContext(request);
     
     // Get categories from database
-    const result = await db.query(`
-      SELECT 
-        id,
-        name,
-        display_name,
-        description,
-        base_schema,
-        active,
-        created_at
-      FROM mtcli_entity_categories 
-      WHERE tenant_id = $1 AND active = true
-      ORDER BY display_name ASC
-    `, [tenantId]);
+    const result = await db.table('entityCategories')
+      .select('id, name, display_name, description, base_schema, active, created_at')
+      .eq('tenant_id', tenantId)
+      .eq('active', true)
+      .order('display_name', { ascending: true });
 
     return {
       categories: result.rows,
