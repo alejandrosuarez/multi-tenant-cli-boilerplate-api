@@ -39,8 +39,8 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
         entity_type: entity.entity_type || '',
         attributes: {
           ...mergedAttributes || {},
-          name: entity.name || '',
-          description: entity.description || ''
+          name: entity.attributes.name || '',
+          description: entity.attributes.description || ''
         }
       }));
       setSelectedCategory(entity.entity_type || '');
