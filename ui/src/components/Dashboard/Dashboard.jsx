@@ -56,8 +56,16 @@ const Dashboard = ({ user, onLogout }) => {
         response = await entitiesAPI.getMyEntities(tenantId, page);
       }
       
-      setEntities(response.data.entities || response.data);
-      setPagination(response.data.pagination);
+      const newEntities = response.data.entities || response.data;
+      const newPagination = response.data.pagination;
+
+      // Only update state if data has actually changed to prevent re-render blink
+      if (JSON.stringify(newEntities) !== JSON.stringify(entities)) {
+        setEntities(newEntities);
+      }
+      if (JSON.stringify(newPagination) !== JSON.stringify(pagination)) {
+        setPagination(newPagination);
+      }
       setCurrentPage(page);
     } catch (err) {
       setError('Failed to load entities');
