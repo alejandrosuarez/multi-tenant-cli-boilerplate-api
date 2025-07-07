@@ -17,7 +17,7 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
     const fetchCategories = async () => {
       try {
         const response = await categoriesAPI.getAll(tenantId);
-        setCategories(response.categories);
+        setCategories(response.data.categories);
       } catch (error) {
         console.error('Error fetching categories:', error);
       }
