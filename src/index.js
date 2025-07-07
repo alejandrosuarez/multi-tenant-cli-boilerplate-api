@@ -2,6 +2,19 @@ const fastify = require('fastify')({ logger: true });
 const path = require('path');
 const fs = require('fs');
 
+// Register CORS support
+fastify.register(require('@fastify/cors'), {
+  origin: [
+    'http://localhost:5173', // Vite dev server
+    'http://localhost:3001', // UI preview server
+    'http://localhost:4173', // Vite preview server
+    /^https:\/\/.*\.vercel\.app$/, // Vercel deployments
+    /^https:\/\/.*\.netlify\.app$/, // Netlify deployments
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
+});
+
 // Register multipart support for file uploads
 fastify.register(require('@fastify/multipart'), {
   limits: {

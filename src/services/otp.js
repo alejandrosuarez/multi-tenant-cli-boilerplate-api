@@ -21,10 +21,6 @@ class OTPService {
 
   async sendOTP(email, tenantId = 'default') {
     try {
-      if (!this.resend) {
-        throw new Error('Resend not configured - missing API key');
-      }
-
       const otp = this.generateOTP();
       const expiry = Date.now() + (5 * 60 * 1000); // 5 minutes
       
@@ -38,7 +34,21 @@ class OTPService {
         tenantId
       });
 
-      // Send email
+      // Development mode - just log the OTP instead of sending email
+      if (!this.resend || process.env.NODE_ENV === 'development') {
+        console.log(`🔐 OTP for ${email} (${tenantId}): ${otp}`);
+        console.log(`📧 Email service not configured - OTP logged to console`);
+        
+        return {
+          success: true,
+          messageId: 'dev-mode',
+          expiresAt: new Date(expiry).toISOString(),
+          devMode: true,
+          otp: process.env.NODE_ENV === 'development' ? otp : undefined
+        };
+      }
+
+      // Production mode - send actual email
       const { data, error } = await this.resend.emails.send({
         from: this.fromEmail,
         to: [email],
