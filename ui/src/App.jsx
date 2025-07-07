@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AuthContainer from './components/Auth/AuthContainer';
 import Dashboard from './components/Dashboard/Dashboard';
+import ListingPage from './components/Listing/ListingPage';
 import { authAPI } from './services/api';
 import './styles/globals.css';
 
@@ -45,13 +47,17 @@ function App() {
   }
 
   return (
-    <div className="page-container">
-      {user ? (
-        <Dashboard user={user} onLogout={handleLogout} />
-      ) : (
-        <AuthContainer onAuth={handleAuth} />
-      )}
-    </div>
+    <BrowserRouter>
+      <div className="page-container">
+        <Routes>
+          <Route path="/listing" element={<ListingPage />} />
+          <Route
+            path="/*"
+            element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <AuthContainer onAuth={handleAuth} />}
+          />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }
 
