@@ -7,7 +7,7 @@
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #e0e5ec;
-  color: #333;
+  color: #4a4a4a;
   line-height: 1.6;
 }
 
@@ -27,6 +27,7 @@ body {
   outline: none;
   width: 100%;
   margin: 10px 0;
+  color: #4a4a4a;
 }
 
 .neumorphic-input:focus {
@@ -43,6 +44,7 @@ body {
   box-shadow: 6px 6px 10px #c2c8d0, -6px -6px 10px #ffffff;
   transition: all 0.3s ease;
   outline: none;
+  color: #4a4a4a;
 }
 
 .neumorphic-button:hover {
@@ -125,6 +127,7 @@ body {
 .page-container {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   padding: 20px;
