@@ -763,6 +763,71 @@ fastify.post('/api/test/send-email', async (request, reply) => {
   }
 });
 
+// Root endpoint
+fastify.get('/', async (request, reply) => {
+  return {
+    name: 'Multi-Tenant CLI Boilerplate API',
+    version: '1.0.0',
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/health',
+      setup: '/api/setup',
+      entities: '/api/entities',
+      auth: '/api/auth/*',
+      docs: 'https://github.com/your-repo/docs'
+    }
+  };
+});
+
+// Database setup endpoint
+fastify.post('/api/setup', async (request, reply) => {
+  try {
+    // Run database migrations
+    const fs = require('fs');
+    const path = require('path');
+    
+    const migrationsDir = path.join(__dirname, 'db', 'migrations');
+    const migrations = fs.readdirSync(migrationsDir).sort();
+    
+    const results = [];
+    
+    for (const migration of migrations) {
+      if (migration.endsWith('.sql')) {
+        const migrationPath = path.join(migrationsDir, migration);
+        const sql = fs.readFileSync(migrationPath, 'utf8');
+        
+        try {
+          await db.query(sql);
+          results.push({ migration, status: 'success' });
+        } catch (error) {
+          // If table already exists, that's okay
+          if (error.message.includes('already exists')) {
+            results.push({ migration, status: 'already_exists' });
+          } else {
+            results.push({ migration, status: 'error', error: error.message });
+          }
+        }
+      }
+    }
+    
+    return {
+      success: true,
+      message: 'Database setup completed',
+      migrations: results,
+      timestamp: new Date().toISOString()
+    };
+    
+  } catch (error) {
+    reply.status(500);
+    return { 
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
+});
+
 // Start server
 const start = async () => {
   try {
