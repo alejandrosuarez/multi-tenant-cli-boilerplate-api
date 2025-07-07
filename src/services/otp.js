@@ -155,7 +155,9 @@ class OTPService {
         email: data.email,
         tenantId: data.tenantId,
         attempts: data.attempts,
-        expiresAt: new Date(data.expiry).toISOString()
+        expiresAt: new Date(data.expiry).toISOString(),
+        // Include OTP code in development for testing
+        ...(process.env.NODE_ENV !== 'production' && { otp: data.otp })
       }))
     };
   }

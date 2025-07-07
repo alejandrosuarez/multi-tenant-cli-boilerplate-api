@@ -1,10 +1,13 @@
 const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
+const crypto = require('crypto');
 
 class AuthMiddleware {
   constructor() {
     this.client = null;
     this.clerkJwksUrl = process.env.CLERK_JWKS_URL;
+    this.jwtSecret = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
+    this.activeSessions = new Map(); // Store active sessions for logout
     
     if (this.clerkJwksUrl) {
       this.client = jwksClient({
@@ -30,6 +33,30 @@ class AuthMiddleware {
     });
   };
 
+  // Generate persistent JWT token (no expiry)
+  generatePersistentToken(user) {
+    const payload = {
+      sub: user.id || user.email,
+      email: user.email,
+      tenant: user.tenantId || 'default',
+      type: 'persistent',
+      iat: Math.floor(Date.now() / 1000)
+      // No exp field = no expiry
+    };
+
+    const token = jwt.sign(payload, this.jwtSecret, { algorithm: 'HS256' });
+    
+    // Store session for logout capability
+    this.activeSessions.set(token, {
+      userId: payload.sub,
+      email: payload.email,
+      tenant: payload.tenant,
+      createdAt: new Date()
+    });
+
+    return token;
+  }
+
   // Verify JWT token
   async verifyToken(token) {
     return new Promise((resolve, reject) => {
@@ -43,6 +70,24 @@ class AuthMiddleware {
         return;
       }
 
+      // Try our persistent tokens first
+      try {
+        const decoded = jwt.verify(token, this.jwtSecret, { algorithms: ['HS256'] });
+        if (decoded.type === 'persistent') {
+          // Check if token is still in active sessions (not logged out)
+          if (this.activeSessions.has(token)) {
+            resolve(decoded);
+            return;
+          } else {
+            reject(new Error('Token has been logged out'));
+            return;
+          }
+        }
+      } catch (err) {
+        // Not our token, try Clerk
+      }
+
+      // Fall back to Clerk JWT verification
       if (!this.client) {
         reject(new Error('Authentication not configured'));
         return;
@@ -60,6 +105,20 @@ class AuthMiddleware {
         }
       });
     });
+  }
+
+  // Logout - invalidate token
+  logout(token) {
+    if (this.activeSessions.has(token)) {
+      this.activeSessions.delete(token);
+      return true;
+    }
+    return false;
+  }
+
+  // Get active sessions count (for debugging)
+  getActiveSessionsCount() {
+    return this.activeSessions.size;
   }
 
   // Extract token from request
