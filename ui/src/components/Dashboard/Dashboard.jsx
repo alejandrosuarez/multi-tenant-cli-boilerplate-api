@@ -3,6 +3,7 @@ import { entitiesAPI, categoriesAPI } from '../../services/api';
 import EntityList from './EntityList';
 import EntityForm from './EntityForm';
 import { useRealtime } from '../../hooks/useRealtime';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
 
 const Dashboard = ({ user, onLogout }) => {
   const [entities, setEntities] = useState([]);
@@ -53,7 +54,7 @@ const Dashboard = ({ user, onLogout }) => {
       } else if (selectedCategory) {
         response = await categoriesAPI.getEntitiesByCategory(selectedCategory, tenantId, page);
       } else {
-        response = await entitiesAPI.getMyEntities(tenantId, page);
+        response = await entitiesAPI.getAll(tenantId, page);
       }
       
       const newEntities = response.data.entities || response.data;
@@ -130,114 +131,120 @@ const Dashboard = ({ user, onLogout }) => {
   };
 
   return (
-    <div className="main-layout">
-      <header className="neumorphic-card" style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1>Dashboard</h1>
-            <p>Welcome back, {user.email}!</p>
-            <p style={{ fontSize: '0.8em', color: '#666' }}>Tenant: {tenantId}</p>
-          </div>
-          <button onClick={handleLogout} className="neumorphic-button">
-            Logout
-          </button>
-        </div>
-      </header>
+    <Container className="main-layout py-4">
+      <Card className="mb-4 shadow-sm">
+        <Card.Body>
+          <Row className="align-items-center">
+            <Col>
+              <h1 className="mb-1">Dashboard</h1>
+              <p className="text-muted mb-0">Welcome back, {user.email}!</p>
+              <p className="text-muted small mb-0">Tenant: {tenantId}</p>
+            </Col>
+            <Col xs="auto">
+              <Button variant="outline-secondary" onClick={handleLogout}>
+                Logout
+              </Button>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
 
-      {error && <div className="error-message">{error}</div>}
+      {error && <Alert variant="danger">{error}</Alert>}
 
-      <div className="grid grid-2">
-        <div>
-          {/* Category Filter */}
-          {categories.length > 0 && (
-            <div className="neumorphic-card" style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
-                Filter by Category
-              </label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="neumorphic-input"
-              >
-                <option value="">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.name}>
-                    {category.display_name || category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          
-          <div className="neumorphic-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2>My Entities</h2>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button 
-                  onClick={toggleRealtime}
-                  className={`neumorphic-button ${isRealtimeActive ? 'active' : ''}`}
-                  title={isRealtimeActive ? 'Disable auto-refresh' : 'Enable auto-refresh'}
-                >
-                  {isRealtimeActive ? '🔄 Live' : '⏸️ Paused'}
-                </button>
-                <button 
-                  onClick={() => setShowForm(true)} 
-                  className="neumorphic-button"
-                >
-                  Add Entity
-                </button>
+      <Row>
+        <Col lg={showForm ? 6 : 12}>
+          <Card className="mb-4 shadow-sm">
+            <Card.Body>
+              {categories.length > 0 && (
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-bold">Filter by Category</Form.Label>
+                  <Form.Select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.name}>
+                        {category.display_name || category.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              )}
+              
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h2>My Entities</h2>
+                <div className="d-flex gap-2">
+                  <Button 
+                    variant={isRealtimeActive ? 'primary' : 'outline-secondary'}
+                    onClick={toggleRealtime}
+                    title={isRealtimeActive ? 'Disable auto-refresh' : 'Enable auto-refresh'}
+                  >
+                    {isRealtimeActive ? '🔄 Live' : '⏸️ Paused'}
+                  </Button>
+                  <Button 
+                    variant="primary" 
+                    onClick={() => setShowForm(true)} 
+                  >
+                    Add Entity
+                  </Button>
+                </div>
               </div>
-            </div>
-            
-            <input
-              type="text"
-              placeholder="Search entities..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="neumorphic-input"
-              style={{ marginBottom: '20px' }}
-            />
-
-            {loading ? (
-              <div className="loading-spinner"></div>
-            ) : (
-              <>
-                <EntityList
-                  entities={entities}
-                  onEdit={handleEdit}
-                  onDelete={handleDeleteEntity}
-                  tenantId={tenantId}
+              
+              <Form.Group className="mb-3">
+                <Form.Control
+                  type="text"
+                  placeholder="Search entities..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                
-                {/* Pagination */}
-                {pagination && pagination.totalPages > 1 && (
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
-                    <button
-                      onClick={() => loadEntities(currentPage - 1)}
-                      disabled={currentPage <= 1}
-                      className="neumorphic-button"
-                    >
-                      Previous
-                    </button>
-                    <span style={{ padding: '10px', color: '#666' }}>
-                      Page {currentPage} of {pagination.totalPages}
-                    </span>
-                    <button
-                      onClick={() => loadEntities(currentPage + 1)}
-                      disabled={currentPage >= pagination.totalPages}
-                      className="neumorphic-button"
-                    >
-                      Next
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
+              </Form.Group>
 
-        <div>
-          {showForm && (
+              {loading ? (
+                <div className="text-center py-4">
+                  <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </Spinner>
+                </div>
+              ) : (
+                <>
+                  <EntityList
+                    entities={entities}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteEntity}
+                    tenantId={tenantId}
+                  />
+                  
+                  {/* Pagination */}
+                  {pagination && pagination.totalPages > 1 && (
+                    <div className="d-flex justify-content-center gap-2 mt-3">
+                      <Button
+                        onClick={() => loadEntities(currentPage - 1)}
+                        disabled={currentPage <= 1}
+                        variant="outline-secondary"
+                      >
+                        Previous
+                      </Button>
+                      <span className="align-self-center text-muted small">
+                        Page {currentPage} of {pagination.totalPages}
+                      </span>
+                      <Button
+                        onClick={() => loadEntities(currentPage + 1)}
+                        disabled={currentPage >= pagination.totalPages}
+                        variant="outline-secondary"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {showForm && (
+          <Col lg={6}>
             <EntityForm
               entity={editingEntity}
               tenantId={tenantId}
@@ -248,10 +255,10 @@ const Dashboard = ({ user, onLogout }) => {
                 setEditingEntity(null);
               }}
             />
-          )}
-        </div>
-      </div>
-    </div>
+          </Col>
+        )}
+      </Row>
+    </Container>
   );
 };
 

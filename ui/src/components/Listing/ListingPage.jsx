@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { entitiesAPI, categoriesAPI } from '../../services/api';
 import ListingCard from './ListingCard';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
 
 const ListingPage = () => {
   const [entities, setEntities] = useState([]);
@@ -61,76 +62,88 @@ const ListingPage = () => {
   };
 
   return (
-    <div className="main-layout">
-      <h1 style={{ textAlign: 'center', marginBottom: '20px' }}>All Listings</h1>
+    <Container className="main-layout py-4">
+      <h1 className="text-center mb-4">All Listings</h1>
 
-      {error && <div className="error-message">{error}</div>}
+      {error && <Alert variant="danger">{error}</Alert>}
 
-      <div className="neumorphic-card" style={{ marginBottom: '20px', padding: '1.5em' }}>
-        <div style={{ display: 'flex', gap: '15px', marginBottom: '15px' }}>
-          <input
-            type="text"
-            placeholder="Search listings..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="neumorphic-input"
-            style={{ flex: 1 }}
-          />
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="neumorphic-input"
-            style={{ flex: 0.5 }}
-          >
-            <option value="">All Categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.name}>
-                {category.display_name || category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <button onClick={loadEntities} className="neumorphic-button" disabled={loading}>
-          {loading ? 'Searching...' : 'Apply Filters'}
-        </button>
-      </div>
+      <Card className="mb-4 shadow-sm">
+        <Card.Body>
+          <Row className="g-3">
+            <Col md={6}>
+              <Form.Control
+                type="text"
+                placeholder="Search listings..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </Col>
+            <Col md={4}>
+              <Form.Select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+              >
+                <option value="">All Categories</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.name}>
+                    {category.display_name || category.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Col>
+            <Col md={2}>
+              <Button onClick={loadEntities} className="w-100" disabled={loading}>
+                {loading ? <Spinner animation="border" size="sm" /> : 'Apply Filters'}
+              </Button>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
 
       {loading ? (
-        <div className="loading-spinner"></div>
+        <div className="text-center py-5">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </div>
       ) : (
-        <div className="grid grid-2">
+        <Row xs={1} md={2} lg={3} className="g-4">
           {entities.length > 0 ? (
             entities.map((entity) => (
-              <ListingCard key={entity.id} entity={entity} />
+              <Col key={entity.id} className="d-flex">
+                <ListingCard entity={entity} />
+              </Col>
             ))
           ) : (
-            <p style={{ textAlign: 'center', gridColumn: '1 / -1' }}>No listings found.</p>
+            <Col className="text-center py-5">
+              <p>No listings found.</p>
+            </Col>
           )}
-        </div>
+        </Row>
       )}
 
       {pagination && pagination.totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
-          <button
+        <div className="d-flex justify-content-center gap-2 mt-4">
+          <Button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage <= 1}
-            className="neumorphic-button"
+            variant="outline-primary"
           >
             Previous
-          </button>
-          <span style={{ padding: '10px', color: '#666' }}>
+          </Button>
+          <span className="align-self-center text-muted small">
             Page {currentPage} of {pagination.totalPages}
           </span>
-          <button
+          <Button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage >= pagination.totalPages}
-            className="neumorphic-button"
+            variant="outline-primary"
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
-    </div>
+    </Container>
   );
 };
 

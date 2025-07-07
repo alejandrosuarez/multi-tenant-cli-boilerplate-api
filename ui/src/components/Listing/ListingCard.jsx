@@ -1,67 +1,49 @@
 import React, { useState } from 'react';
+import { Card, Button, Carousel, Badge } from 'react-bootstrap';
 
 const ListingCard = ({ entity }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
   const hasImages = entity.images && entity.images.length > 0;
 
-  const handleNextImage = () => {
-    if (hasImages) {
-      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % entity.images.length);
-    }
-  };
-
-  const handlePrevImage = () => {
-    if (hasImages) {
-      setCurrentImageIndex((prevIndex) =>
-        (prevIndex - 1 + entity.images.length) % entity.images.length
-      );
-    }
-  };
-
   return (
-    <div className="neumorphic-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Card className="shadow-sm h-100 d-flex flex-column">
       {hasImages ? (
-        <div style={{ position: 'relative', width: '100%', paddingTop: '75%', overflow: 'hidden', borderRadius: '10px', marginBottom: '10px' }}>
-          <img
-            src={entity.images[currentImageIndex].url}
-            alt={entity.name || 'Entity Image'}
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-          {entity.images.length > 1 && (
-            <div style={{ position: 'absolute', top: '50%', width: '100%', display: 'flex', justifyContent: 'space-between', transform: 'translateY(-50%)', padding: '0 10px' }}>
-              <button onClick={handlePrevImage} className="neumorphic-button" style={{ padding: '5px 10px' }}>
-                &lt;
-              </button>
-              <button onClick={handleNextImage} className="neumorphic-button" style={{ padding: '5px 10px' }}>
-                &gt;
-              </button>
-            </div>
-          )}
-        </div>
+        <Carousel interval={null} indicators={false} controls={entity.images.length > 1}>
+          {entity.images.map((image, idx) => (
+            <Carousel.Item key={idx}>
+              <Card.Img 
+                variant="top" 
+                src={image.url}
+                alt={entity.name || 'Entity Image'}
+                style={{ height: '200px', objectFit: 'cover' }}
+              />
+            </Carousel.Item>
+          ))}
+        </Carousel>
       ) : (
-        <div style={{ width: '100%', paddingTop: '75%', background: '#ccc', borderRadius: '10px', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
-          No Image
+        <div className="bg-light d-flex align-items-center justify-content-center" style={{ height: '200px' }}>
+          <span className="text-muted">No Image</span>
         </div>
       )}
 
-      <h3 style={{ marginBottom: '10px' }}>{entity.name || 'Unnamed Entity'}</h3>
-      <p style={{ fontSize: '0.9em', color: '#666', marginBottom: '10px' }}>
-        Type: {entity.entity_type || 'N/A'}
-      </p>
-      <p style={{ fontSize: '0.9em', marginBottom: '15px', flexGrow: 1 }}>
-        {entity.description || 'No description provided.'}
-      </p>
+      <Card.Body className="d-flex flex-column">
+        <Card.Title className="mb-2">{entity.name || 'Unnamed Entity'}</Card.Title>
+        <Card.Subtitle className="mb-2 text-muted">
+          Type: <Badge bg="info">{entity.entity_type || 'N/A'}</Badge>
+        </Card.Subtitle>
+        <Card.Text className="mb-3 flex-grow-1">
+          {entity.description || 'No description provided.'}
+        </Card.Text>
 
-      <div style={{ borderTop: '1px solid #ccc', paddingTop: '10px', marginTop: 'auto' }}>
-        <h4 style={{ marginBottom: '5px' }}>Attributes:</h4>
-        {Object.entries(entity.attributes || {}).map(([key, value]) => (
-          <p key={key} style={{ fontSize: '0.8em', color: '#555' }}>
-            <strong>{key}:</strong> {String(value)}
-          </p>
-        ))}
-      </div>
-    </div>
+        <div className="mt-auto pt-3 border-top">
+          <h6 className="mb-2">Attributes:</h6>
+          {Object.entries(entity.attributes || {}).map(([key, value]) => (
+            <p key={key} className="text-muted small mb-1">
+              <strong>{key}:</strong> {String(value)}
+            </p>
+          ))}
+        </div>
+      </Card.Body>
+    </Card>
   );
 };
 

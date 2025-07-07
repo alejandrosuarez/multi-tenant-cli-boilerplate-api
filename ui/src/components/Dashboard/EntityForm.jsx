@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { mediaAPI, categoriesAPI } from '../../services/api';
+import { Form, Button, Card, Row, Col, Spinner, Alert } from 'react-bootstrap';
 
 const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [imageFiles, setImageFiles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState('');
 
   useEffect(() => {
     console.log('EntityForm useEffect: entity prop changed', entity);
@@ -21,6 +23,7 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
         setCategories(response.data.categories || []);
       } catch (error) {
         console.error('Error fetching categories:', error);
+        setFormError('Failed to load categories for form.');
       }
     };
 
@@ -57,6 +60,7 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setFormError('');
 
     try {
       const entityData = {
@@ -75,10 +79,12 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
           await mediaAPI.uploadToEntity(entity.id, imageFiles, tenantId);
         } catch (err) {
           console.error('Image upload error:', err);
+          setFormError('Image upload failed.');
         }
       }
     } catch (err) {
       console.error('Form submission error:', err);
+      setFormError(err.response?.data?.error || 'Failed to save entity.');
     } finally {
       setLoading(false);
     }
@@ -108,102 +114,99 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
   };
 
   return (
-    <div className="neumorphic-card">
-      <h2>{entity ? 'Edit Entity' : 'Create Entity'}</h2>
-      
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="name"
-          placeholder="Entity Name"
-          value={formData.name}
-          onChange={handleChange}
-          className="neumorphic-input"
-          required
-        />
+    <Card className="shadow-sm">
+      <Card.Body>
+        <Card.Title>{entity ? 'Edit Entity' : 'Create Entity'}</Card.Title>
+        {formError && <Alert variant="danger">{formError}</Alert>}
+        <Form onSubmit={handleSubmit}>
+          <Form.Group className="mb-3">
+            <Form.Label>Entity Name</Form.Label>
+            <Form.Control
+              type="text"
+              name="name"
+              placeholder="Entity Name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+          </Form.Group>
 
-        <select
-          name="entity_type"
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-          className="neumorphic-input"
-          required
-        >
-          <option value="">Select Entity Type</option>
-          {categories.map(cat => (
-            <option key={cat.id} value={cat.name}>
-              {cat.display_name}
-            </option>
-          ))}
-        </select>
+          <Form.Group className="mb-3">
+            <Form.Label>Entity Type</Form.Label>
+            <Form.Select
+              name="entity_type"
+              value={selectedCategory}
+              onChange={handleCategoryChange}
+              required
+            >
+              <option value="">Select Entity Type</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.name}>
+                  {cat.display_name}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
 
-        <textarea
-          name="description"
-          placeholder="Description (optional)"
-          value={formData.description}
-          onChange={handleChange}
-          className="neumorphic-input"
-          rows="3"
-          style={{ resize: 'vertical' }}
-        />
+          <Form.Group className="mb-3">
+            <Form.Label>Description (optional)</Form.Label>
+            <Form.Control
+              as="textarea"
+              name="description"
+              placeholder="Description (optional)"
+              value={formData.description}
+              onChange={handleChange}
+              rows="3"
+            />
+          </Form.Group>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Images (optional)
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => setImageFiles(Array.from(e.target.files))}
-            className="neumorphic-input"
-          />
-          {imageFiles.length > 0 && (
-            <div style={{ marginTop: '10px', fontSize: '0.9em', color: '#666' }}>
-              {imageFiles.length} file(s) selected
-            </div>
-          )}
-        </div>
+          <Form.Group className="mb-3">
+            <Form.Label>Images (optional)</Form.Label>
+            <Form.Control
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setImageFiles(Array.from(e.target.files))}
+            />
+            {imageFiles.length > 0 && (
+              <Form.Text className="text-muted">
+                {imageFiles.length} file(s) selected
+              </Form.Text>
+            )}
+          </Form.Group>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
-            Attributes
-          </label>
-          
+          <h5 className="mt-4 mb-3">Attributes</h5>
           {Object.entries(formData.attributes).map(([key, value]) => (
-            <div key={key} style={{ marginBottom: '10px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>{key}:</label>
-              <input
+            <Form.Group className="mb-3" key={key}>
+              <Form.Label>{key}:</Form.Label>
+              <Form.Control
                 type="text"
                 name={key}
                 value={value || ''}
                 onChange={handleAttributeChange}
-                className="neumorphic-input"
               />
-            </div>
+            </Form.Group>
           ))}
-        </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            type="submit"
-            className="neumorphic-button"
-            disabled={loading}
-            style={{ flex: 1 }}
-          >
-            {loading ? 'Saving...' : (entity ? 'Update' : 'Create')}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="neumorphic-button"
-            style={{ flex: 1, background: '#f8d7da', color: '#721c24' }}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+          <div className="d-grid gap-2 mt-4">
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={loading}
+            >
+              {loading ? <Spinner animation="border" size="sm" /> : (entity ? 'Update' : 'Create')}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={onCancel}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+          </div>
+        </Form>
+      </Card.Body>
+    </Card>
   );
 };
 
