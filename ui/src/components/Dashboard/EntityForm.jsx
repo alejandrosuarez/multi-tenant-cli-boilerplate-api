@@ -94,6 +94,14 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
     }));
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   return (
     <div className="neumorphic-card">
       <h2>{entity ? 'Edit Entity' : 'Create Entity'}</h2>
