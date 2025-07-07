@@ -8,6 +8,7 @@ fastify.register(require('@fastify/cors'), {
     'http://localhost:5173', // Vite dev server
     'http://localhost:3001', // UI preview server
     'http://localhost:4173', // Vite preview server
+    'http://localhost:5174', // New Vite dev server port
     /^https:\/\/.*\.vercel\.app$/, // Vercel deployments
     /^https:\/\/.*\.netlify\.app$/, // Netlify deployments
   ],
