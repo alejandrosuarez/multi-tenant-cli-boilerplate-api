@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_URL = 'https://multi-tenant-cli-boilerplate-api.vercel.app/';
 const TOKEN = import.meta.env.VITE_TOKEN || '';
 
 const api = axios.create({
