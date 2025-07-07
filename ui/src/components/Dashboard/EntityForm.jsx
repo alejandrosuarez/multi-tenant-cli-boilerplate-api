@@ -27,14 +27,17 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
     fetchCategories();
 
     if (entity) {
+      const category = categories.find(cat => cat.name === entity.entity_type);
+      const mergedAttributes = category ? { ...category.base_schema, ...entity.attributes } : entity.attributes;
+
       setFormData({
         name: entity.name || '',
         description: entity.description || '',
         entity_type: entity.entity_type || '',
-        attributes: entity.attributes || {}
+        attributes: mergedAttributes || {}
       });
       setSelectedCategory(entity.entity_type || '');
-      console.log('EntityForm useEffect: formData set to', { name: entity.name || '', description: entity.description || '', entity_type: entity.entity_type || '', attributes: entity.attributes || {} });
+      console.log('EntityForm useEffect: formData set to', { name: entity.name || '', description: entity.description || '', entity_type: entity.entity_type || '', attributes: mergedAttributes || {} });
     }
   }, [entity, tenantId]);
 
