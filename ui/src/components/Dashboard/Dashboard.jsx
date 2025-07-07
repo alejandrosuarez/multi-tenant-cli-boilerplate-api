@@ -248,5 +248,3 @@ const Dashboard = ({ user, onLogout }) => {
 };
 
 export default Dashboard;
-
-export default Dashboard;
