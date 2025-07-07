@@ -68,8 +68,10 @@ const Dashboard = ({ user, onLogout }) => {
   };
 
   const handleCreateEntity = async (entityData) => {
+    console.log('handleCreateEntity called', entityData);
     try {
       await entitiesAPI.create(entityData, tenantId);
+      console.log('Entity created successfully, setting showForm to false');
       setShowForm(false);
       loadEntities();
     } catch (err) {
@@ -79,8 +81,10 @@ const Dashboard = ({ user, onLogout }) => {
   };
 
   const handleUpdateEntity = async (entityData) => {
+    console.log('handleUpdateEntity called', entityData);
     try {
       await entitiesAPI.update(editingEntity.id, entityData, tenantId);
+      console.log('Entity updated successfully, setting showForm to false');
       setShowForm(false);
       setEditingEntity(null);
       loadEntities();
@@ -91,10 +95,12 @@ const Dashboard = ({ user, onLogout }) => {
   };
 
   const handleDeleteEntity = async (id) => {
+    console.log('handleDeleteEntity called', id);
     if (!confirm('Are you sure you want to delete this entity?')) return;
     
     try {
       await entitiesAPI.delete(id, tenantId);
+      console.log('Entity deleted successfully');
       loadEntities();
     } catch (err) {
       setError('Failed to delete entity');
@@ -103,11 +109,13 @@ const Dashboard = ({ user, onLogout }) => {
   };
 
   const handleEdit = (entity) => {
+    console.log('handleEdit called', entity);
     setEditingEntity(entity);
     setShowForm(true);
   };
 
   const handleLogout = () => {
+    console.log('handleLogout called');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     onLogout();
@@ -227,6 +235,7 @@ const Dashboard = ({ user, onLogout }) => {
               tenantId={tenantId}
               onSubmit={editingEntity ? handleUpdateEntity : handleCreateEntity}
               onCancel={() => {
+                console.log('EntityForm onCancel called, setting showForm to false');
                 setShowForm(false);
                 setEditingEntity(null);
               }}
@@ -237,5 +246,7 @@ const Dashboard = ({ user, onLogout }) => {
     </div>
   );
 };
+
+export default Dashboard;
 
 export default Dashboard;
