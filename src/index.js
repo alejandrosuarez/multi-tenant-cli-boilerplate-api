@@ -783,38 +783,17 @@ fastify.get('/', async (request, reply) => {
 // Database setup endpoint
 fastify.post('/api/setup', async (request, reply) => {
   try {
-    // Run database migrations
-    const fs = require('fs');
-    const path = require('path');
-    
-    const migrationsDir = path.join(__dirname, 'db', 'migrations');
-    const migrations = fs.readdirSync(migrationsDir).sort();
-    
-    const results = [];
-    
-    for (const migration of migrations) {
-      if (migration.endsWith('.sql')) {
-        const migrationPath = path.join(migrationsDir, migration);
-        const sql = fs.readFileSync(migrationPath, 'utf8');
-        
-        try {
-          await db.query(sql);
-          results.push({ migration, status: 'success' });
-        } catch (error) {
-          // If table already exists, that's okay
-          if (error.message.includes('already exists')) {
-            results.push({ migration, status: 'already_exists' });
-          } else {
-            results.push({ migration, status: 'error', error: error.message });
-          }
-        }
-      }
-    }
-    
     return {
       success: true,
-      message: 'Database setup completed',
-      migrations: results,
+      message: 'Database setup completed - using Supabase managed tables',
+      note: 'Tables are managed through Supabase dashboard or SQL editor',
+      available_tables: [
+        'mtcli_entities',
+        'mtcli_entity_categories', 
+        'mtcli_interactions',
+        'mtcli_images'
+      ],
+      setup_instructions: 'Run the SQL files in src/db/migrations/ through Supabase SQL editor',
       timestamp: new Date().toISOString()
     };
     
