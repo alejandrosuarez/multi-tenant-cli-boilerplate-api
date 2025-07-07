@@ -15,18 +15,18 @@ body {
   background: #e0e5ec;
   border-radius: 20px;
   box-shadow: 10px 10px 30px #c2c8d0, -10px -10px 30px #ffffff;
-  padding: 30px;
+  padding: 1.5em;
 }
 
 .neumorphic-input {
   background: #e0e5ec;
   border: none;
   border-radius: 10px;
-  padding: 12px;
+  padding: 0.75em;
   box-shadow: inset 4px 4px 6px #c8ccd1, inset -4px -4px 6px #f0f5fa;
   outline: none;
   width: 100%;
-  margin: 10px 0;
+  margin: 0.5em 0;
   color: #4a4a4a;
 }
 
@@ -38,7 +38,7 @@ body {
   background: #e0e5ec;
   border: none;
   border-radius: 10px;
-  padding: 12px 20px;
+  padding: 0.75em 1.25em;
   cursor: pointer;
   font-weight: bold;
   box-shadow: 6px 6px 10px #c2c8d0, -6px -6px 10px #ffffff;
@@ -66,8 +66,8 @@ body {
   background: #e0e5ec;
   border-radius: 15px;
   box-shadow: 8px 8px 20px #c2c8d0, -8px -8px 20px #ffffff;
-  padding: 20px;
-  margin: 15px 0;
+  padding: 1.25em;
+  margin: 1em 0;
 }
 
 .loading-spinner {
@@ -77,7 +77,7 @@ body {
   width: 30px;
   height: 30px;
   animation: spin 1s linear infinite;
-  margin: 20px auto;
+  margin: 1.25em auto;
 }
 
 @keyframes spin {
@@ -90,8 +90,8 @@ body {
   background: #fdf2f2;
   border: 1px solid #f5c6cb;
   border-radius: 10px;
-  padding: 10px;
-  margin: 10px 0;
+  padding: 0.75em;
+  margin: 0.5em 0;
   box-shadow: inset 2px 2px 5px #f0c2c7, inset -2px -2px 5px #ffffff;
 }
 
@@ -100,21 +100,21 @@ body {
   background: #f2fdf2;
   border: 1px solid #c6f5cb;
   border-radius: 10px;
-  padding: 10px;
-  margin: 10px 0;
+  padding: 0.75em;
+  margin: 0.5em 0;
   box-shadow: inset 2px 2px 5px #c2f0c7, inset -2px -2px 5px #ffffff;
 }
 
 .tabs {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
-  gap: 10px;
+  margin-bottom: 1.25em;
+  gap: 0.75em;
 }
 
 .tabs button {
   flex: 1;
-  padding: 10px;
+  padding: 0.75em;
   border: none;
   background: #e0e5ec;
   font-weight: bold;
@@ -130,14 +130,14 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 1em;
 }
 
 .main-layout {
   max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  padding: 20px;
+  padding: 1.25em;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -159,11 +159,11 @@ body {
 
 @media (max-width: 768px) {
   .neumorphic-container {
-    padding: 20px;
-    margin: 10px;
+    padding: 1em;
+    margin: 0.5em;
   }
   
   .main-layout {
-    padding: 10px;
+    padding: 0.5em;
   }
 }
