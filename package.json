@@ -1,0 +1,39 @@
+{
+  "name": "multi-tenant-cli-boilerplate",
+  "version": "1.0.0",
+  "description": "Multi-tenant CLI boilerplate with Universal CLI integration",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "multi-tenant",
+    "cli",
+    "boilerplate",
+    "universal-cli",
+    "supabase",
+    "vercel"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "fastify": "^4.24.3",
+    "@supabase/supabase-js": "^2.38.4",
+    "dotenv": "^16.3.1",
+    "uuid": "^9.0.1",
+    "resend": "^2.1.0",
+    "@sentry/node": "^7.81.1",
+    "cookie": "^0.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.1.0",
+    "@fastify/multipart": "^8.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
