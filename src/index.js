@@ -320,8 +320,8 @@ fastify.get('/api/categories', {
       .order('display_name', { ascending: true });
 
     return {
-      categories: result.rows,
-      total: result.rows.length
+      categories: result.data,
+      total: result.data.length
     };
   } catch (error) {
     reply.status(500);
