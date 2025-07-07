@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authAPI } from '../../services/api';
+import { Form, Button, Alert } from 'react-bootstrap';
 
 const OTPLogin = ({ onLogin }) => {
   const [step, setStep] = useState('email'); // 'email' or 'otp'
@@ -72,102 +73,103 @@ const OTPLogin = ({ onLogin }) => {
 
   if (step === 'email') {
     return (
-      <form onSubmit={handleSendOTP} className="form">
-        <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Access Your Account</h2>
+      <Form onSubmit={handleSendOTP}>
+        <h2 className="text-center mb-4">Access Your Account</h2>
         
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
+        {error && <Alert variant="danger">{error}</Alert>}
+        {success && <Alert variant="success">{success}</Alert>}
         
-        <input
-          type="email"
-          name="email"
-          placeholder="Enter your email"
-          value={formData.email}
-          onChange={handleChange}
-          className="neumorphic-input"
-          required
-        />
+        <Form.Group className="mb-3">
+          <Form.Control
+            type="email"
+            name="email"
+            placeholder="Enter your email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+        </Form.Group>
         
-        <input
-          type="text"
-          name="tenantId"
-          placeholder="Tenant ID (optional)"
-          value={formData.tenantId}
-          onChange={handleChange}
-          className="neumorphic-input"
-        />
+        <Form.Group className="mb-3">
+          <Form.Control
+            type="text"
+            name="tenantId"
+            placeholder="Tenant ID (optional)"
+            value={formData.tenantId}
+            onChange={handleChange}
+          />
+        </Form.Group>
         
-        <button 
+        <Button 
+          variant="primary" 
           type="submit" 
-          className="neumorphic-button"
+          className="w-100"
           disabled={loading}
         >
           {loading ? 'Sending OTP...' : 'Send Verification Code'}
-        </button>
+        </Button>
         
-        <p style={{ textAlign: 'center', margin: '15px 0', fontSize: '0.9em', color: '#666' }}>
+        <p className="text-center mt-3 text-muted small">
           We'll send a 6-digit code to your email
         </p>
-      </form>
+      </Form>
     );
   }
 
   return (
-    <form onSubmit={handleVerifyOTP} className="form">
-      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Enter Verification Code</h2>
+    <Form onSubmit={handleVerifyOTP}>
+      <h2 className="text-center mb-4">Enter Verification Code</h2>
       
-      {error && <div className="error-message">{error}</div>}
+      {error && <Alert variant="danger">{error}</Alert>}
       
-      <div style={{ textAlign: 'center', marginBottom: '20px', fontSize: '0.9em', color: '#666' }}>
+      <p className="text-center mb-3 text-muted small">
         Code sent to: <strong>{formData.email}</strong>
-      </div>
+      </p>
       
-      <input
-        type="text"
-        name="otp"
-        placeholder="Enter 6-digit code"
-        value={formData.otp}
-        onChange={handleChange}
-        className="neumorphic-input"
-        maxLength="6"
-        style={{ textAlign: 'center', fontSize: '1.2em', letterSpacing: '0.2em' }}
-        required
-      />
+      <Form.Group className="mb-3">
+        <Form.Control
+          type="text"
+          name="otp"
+          placeholder="Enter 6-digit code"
+          value={formData.otp}
+          onChange={handleChange}
+          maxLength="6"
+          className="text-center fs-4 fw-bold"
+          required
+        />
+      </Form.Group>
       
       {otpExpiry && (
-        <div style={{ textAlign: 'center', marginBottom: '15px', fontSize: '0.8em', color: '#666' }}>
+        <p className="text-center mb-3 text-muted small">
           Code expires at: {new Date(otpExpiry).toLocaleTimeString()}
-        </div>
+        </p>
       )}
       
-      <button 
+      <Button 
+        variant="primary" 
         type="submit" 
-        className="neumorphic-button"
+        className="w-100"
         disabled={loading}
       >
         {loading ? 'Verifying...' : 'Verify Code'}
-      </button>
+      </Button>
       
-      <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
-        <button 
-          type="button" 
+      <div className="d-grid gap-2 mt-3">
+        <Button 
+          variant="outline-secondary" 
           onClick={handleBackToEmail}
-          className="neumorphic-button"
-          style={{ flex: 1, background: '#f8d7da', color: '#721c24' }}
         >
           Back
-        </button>
-        <button 
-          type="button" 
+        </Button>
+        <Button 
+          variant="outline-primary" 
           onClick={handleSendOTP}
-          className="neumorphic-button"
-          style={{ flex: 1 }}
           disabled={loading}
         >
           Resend Code
-        </button>
+        </Button>
       </div>
-    </form>
+    </Form>
   );
 };
 
