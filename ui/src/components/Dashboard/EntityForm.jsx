@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { mediaAPI } from '../../services/api';
+import { mediaAPI, categoriesAPI } from '../../services/api';
 
 const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -8,12 +8,23 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
     entity_type: '',
     attributes: {}
   });
-  const [attributeKey, setAttributeKey] = useState('');
-  const [attributeValue, setAttributeValue] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [imageFiles, setImageFiles] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await categoriesAPI.getAll(tenantId);
+        setCategories(response.categories);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+
     if (entity) {
       setFormData({
         name: entity.name || '',
@@ -21,15 +32,28 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
         entity_type: entity.entity_type || '',
         attributes: entity.attributes || {}
       });
+      setSelectedCategory(entity.entity_type || '');
     }
-  }, [entity]);
+  }, [entity, tenantId]);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      const category = categories.find(cat => cat.name === selectedCategory);
+      if (category) {
+        setFormData(prev => ({
+          ...prev,
+          entity_type: category.name,
+          attributes: category.base_schema || {}
+        }));
+      }
+    }
+  }, [selectedCategory, categories]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // First create/update the entity
       const entityData = {
         name: formData.name,
         description: formData.description,
@@ -39,13 +63,9 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
 
       const result = await onSubmit(entityData);
       
-      // If we have images and this is a new entity, upload them
       if (imageFiles.length > 0 && !entity) {
-        // For new entities, we'd need the entity ID from the response
-        // This would require modifying the onSubmit to return the created entity
         console.log('Image upload for new entities needs entity ID from response');
       } else if (imageFiles.length > 0 && entity) {
-        // Upload images to existing entity
         try {
           await mediaAPI.uploadToEntity(entity.id, imageFiles, tenantId);
         } catch (err) {
@@ -59,34 +79,19 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value);
   };
 
-  const addAttribute = () => {
-    if (attributeKey && attributeValue) {
-      setFormData({
-        ...formData,
-        attributes: {
-          ...formData.attributes,
-          [attributeKey]: attributeValue
-        }
-      });
-      setAttributeKey('');
-      setAttributeValue('');
-    }
-  };
-
-  const removeAttribute = (key) => {
-    const newAttributes = { ...formData.attributes };
-    delete newAttributes[key];
-    setFormData({
-      ...formData,
-      attributes: newAttributes
-    });
+  const handleAttributeChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      attributes: {
+        ...prev.attributes,
+        [name]: value
+      }
+    }));
   };
 
   return (
@@ -104,14 +109,20 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
           required
         />
 
-        <input
-          type="text"
+        <select
           name="entity_type"
-          placeholder="Entity Type (e.g., product, person, location)"
-          value={formData.entity_type}
-          onChange={handleChange}
+          value={selectedCategory}
+          onChange={handleCategoryChange}
           className="neumorphic-input"
-        />
+          required
+        >
+          <option value="">Select Entity Type</option>
+          {categories.map(cat => (
+            <option key={cat.id} value={cat.name}>
+              {cat.display_name}
+            </option>
+          ))}
+        </select>
 
         <textarea
           name="description"
@@ -146,57 +157,16 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
             Attributes
           </label>
           
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-            <input
-              type="text"
-              placeholder="Key"
-              value={attributeKey}
-              onChange={(e) => setAttributeKey(e.target.value)}
-              className="neumorphic-input"
-              style={{ flex: 1 }}
-            />
-            <input
-              type="text"
-              placeholder="Value"
-              value={attributeValue}
-              onChange={(e) => setAttributeValue(e.target.value)}
-              className="neumorphic-input"
-              style={{ flex: 1 }}
-            />
-            <button
-              type="button"
-              onClick={addAttribute}
-              className="neumorphic-button"
-              style={{ whiteSpace: 'nowrap' }}
-            >
-              Add
-            </button>
-          </div>
-
           {Object.entries(formData.attributes).map(([key, value]) => (
-            <div key={key} style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              padding: '8px',
-              background: '#f0f5fa',
-              borderRadius: '8px',
-              marginBottom: '5px'
-            }}>
-              <span><strong>{key}:</strong> {String(value)}</span>
-              <button
-                type="button"
-                onClick={() => removeAttribute(key)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#e74c3c',
-                  cursor: 'pointer',
-                  fontSize: '0.9em'
-                }}
-              >
-                Remove
-              </button>
+            <div key={key} style={{ marginBottom: '10px' }}>
+              <label style={{ display: 'block', marginBottom: '5px' }}>{key}:</label>
+              <input
+                type="text"
+                name={key}
+                value={value || ''}
+                onChange={handleAttributeChange}
+                className="neumorphic-input"
+              />
             </div>
           ))}
         </div>
