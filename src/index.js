@@ -967,7 +967,7 @@ fastify.post('/api/test/send-email', async (request, reply) => {
 
 // Subscribe device for push notifications
 fastify.post('/api/notifications/subscribe-device', {
-  preHandler: auth.bearerTokenAndDomainCheck.bind(auth)
+  preHandler: auth.optional.bind(auth)
 }, async (request, reply) => {
   try {
     const { deviceToken, tenantContext } = request.body;
@@ -1047,7 +1047,7 @@ fastify.post('/api/notifications/merge-device', {
 
 // Send notification (universal endpoint)
 fastify.post('/api/notifications/send', {
-  preHandler: auth.bearerTokenAndDomainCheck.bind(auth)
+  preHandler: auth.required.bind(auth)
 }, async (request, reply) => {
   try {
     const { 
@@ -1095,7 +1095,7 @@ fastify.post('/api/notifications/send', {
 
 // Send chat request notification
 fastify.post('/api/notifications/chat-request', {
-  preHandler: auth.bearerTokenAndDomainCheck.bind(auth)
+  preHandler: auth.optional.bind(auth)
 }, async (request, reply) => {
   try {
     const { entityId, chatUrl } = request.body;
