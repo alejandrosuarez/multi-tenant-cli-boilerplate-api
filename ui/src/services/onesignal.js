@@ -39,6 +39,11 @@ class OneSignalService {
           enable: true,
         },
         allowLocalhostAsSecureOrigin: true,
+        serviceWorkerPath: '/OneSignalSDKWorker.js',
+        serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
+        path: '/',
+        autoRegister: true,
+        autoResubscribe: true,
       });
 
       // Set up event listeners
@@ -74,6 +79,20 @@ class OneSignalService {
       }
     } catch (error) {
       console.error('Error getting OneSignal player ID:', error);
+    }
+  }
+  
+  async setExternalUserId(userId) {
+    if (!this.isInitialized) {
+      console.log('OneSignal not initialized, skipping setExternalUserId');
+      return;
+    }
+    
+    try {
+      await OneSignal.setExternalUserId(userId);
+      console.log('OneSignal External User ID set:', userId);
+    } catch (error) {
+      console.error('Error setting OneSignal external user ID:', error);
     }
   }
 

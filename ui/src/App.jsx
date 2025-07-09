@@ -51,15 +51,21 @@ function App() {
     
     // Set up OneSignal user context after login
     try {
+      // Set external user ID first (most important for linking)
+      const externalUserId = userData.id || userData.email;
+      await oneSignalService.setExternalUserId(externalUserId);
+      
       if (userData.email) {
         await oneSignalService.setUserEmail(userData.email);
       }
       
       // Set user tags for better targeting
       await oneSignalService.setUserTags({
-        userId: userData.id || userData.email,
+        userId: externalUserId,
         tenantId: userData.tenantId || 'default'
       });
+      
+      console.log('OneSignal user context set up for:', externalUserId);
     } catch (error) {
       console.error('Error setting up OneSignal user context:', error);
     }

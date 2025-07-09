@@ -1285,6 +1285,34 @@ fastify.post('/api/notifications/test', {
   }
 });
 
+// Debug endpoint to check user's OneSignal subscriptions
+fastify.get('/api/debug/user-subscriptions', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  if (process.env.NODE_ENV === 'production') {
+    reply.status(404);
+    return { error: 'Not found' };
+  }
+  
+  try {
+    const userId = request.user.id;
+    const tenantContext = auth.getTenantContext(request);
+    
+    const result = await notificationService.getUserSubscriptions(userId, tenantContext);
+    
+    return {
+      userId: userId,
+      tenantContext: tenantContext,
+      subscriptions: result.data || [],
+      success: result.success,
+      error: result.error
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
 // ================================
 // LEGACY ENDPOINTS
 // ================================
