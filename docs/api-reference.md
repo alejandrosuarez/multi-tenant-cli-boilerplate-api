@@ -2,7 +2,7 @@
 
 Multi-tenant CLI Boilerplate API - Complete endpoint documentation for all tested and ready-to-use endpoints.
 
-**Base URL**: `http://localhost:3000` (local) | `https://your-app.vercel.app` (production)
+**Base URL**: `http://localhost:3000` (local) | `https://multi-tenant-cli-boilerplate-api.vercel.app/` (production)
 
 ---
 

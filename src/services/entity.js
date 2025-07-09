@@ -243,24 +243,26 @@ class EntityService {
         query = query.eq('entity_type', filters.entity_type);
       }
 
-      // Apply attribute filters
-      if (filters.attributes) {
-        for (const [key, value] of Object.entries(filters.attributes)) {
-          if (value && value !== 'null' && value !== 'NA') {
-            query = query.contains('attributes', { [key]: value });
-          }
-        }
-      }
+// Apply attribute filters
+for (const [key, value] of Object.entries(filters)) {
+  // Skip system filters
+  if (['entity_type', 'page', 'limit', 'sort_by', 'sort_order', 'include_images', 'search_query', 'q', 'category'].includes(key)) {
+    continue;
+  }
 
-      // Apply range filters
-      if (filters.price) {
-        if (filters.price.min) {
-          query = query.gte('attributes->price', filters.price.min);
-        }
-        if (filters.price.max) {
-          query = query.lte('attributes->price', filters.price.max);
-        }
-      }
+  // Handle range filters (e.g., price[min], price[max], year[min], year[max])
+  if (typeof value === 'object' && value !== null) {
+    if (value.min !== undefined) {
+      query = query.gte(`attributes->${key}`, value.min);
+    }
+    if (value.max !== undefined) {
+      query = query.lte(`attributes->${key}`, value.max);
+    }
+  } else if (value && value !== 'null' && value !== 'NA') {
+    // Handle exact match filters
+    query = query.contains('attributes', { [key]: value });
+  }
+}
 
       // Apply pagination
       const offset = (page - 1) * limit;

@@ -249,9 +249,27 @@ fastify.get('/api/entities/search', {
       ...attributeFilters 
     } = request.query;
     
+    // Parse range filters from query parameters
+    const parsedFilters = {};
+    
+    for (const [key, value] of Object.entries(attributeFilters)) {
+      // Handle range filters like price[min], price[max]
+      const rangeMatch = key.match(/^(.+)\[(min|max)\]$/);
+      if (rangeMatch) {
+        const [, fieldName, rangeType] = rangeMatch;
+        if (!parsedFilters[fieldName]) {
+          parsedFilters[fieldName] = {};
+        }
+        parsedFilters[fieldName][rangeType] = value;
+      } else {
+        // Handle exact match filters
+        parsedFilters[key] = value;
+      }
+    }
+    
     // Build enhanced filters
     const filters = {
-      ...attributeFilters,
+      ...parsedFilters,
       ...(category && { entity_type: category }),
       ...(q && { search_query: q })
     };
