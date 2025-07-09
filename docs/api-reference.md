@@ -316,7 +316,7 @@ GET /api/shared/{share_token}
 ## 🖼️ Image Management
 
 ### Upload Images to Entity
-Upload and automatically optimize images for an entity.
+Upload and automatically optimize images for an entity. **Only entity owners can upload images.**
 
 ```http
 POST /api/entities/:id/images
@@ -324,9 +324,15 @@ Authorization: Bearer <your-token>
 Content-Type: multipart/form-data
 
 Form Data:
-- file: image file (jpg, png, webp, max 5MB)
+- files: image file (jpg, png, webp, max 5MB) - multiple files supported
 - label: optional label (e.g., "front_view", "interior")
 ```
+
+**Security Requirements**:
+- ✅ **Authentication required**: Must be logged in
+- ✅ **Ownership required**: Only the entity owner can upload images
+- ✅ **Entity must exist**: Entity must exist and be accessible
+- ✅ **Tenant isolation**: Respects tenant boundaries
 
 **Response (Success)**:
 ```json
@@ -407,12 +413,17 @@ Authorization: Bearer <your-token>  // optional for public entities
 ---
 
 ### Delete Image
-Remove an image and all its optimized versions.
+Remove an image and all its optimized versions. **Only the user who uploaded the image can delete it.**
 
 ```http
 DELETE /api/images/:id
 Authorization: Bearer <your-token>
 ```
+
+**Security Requirements**:
+- ✅ **Authentication required**: Must be logged in
+- ✅ **Uploader ownership**: Only the user who uploaded the image can delete it
+- ✅ **Tenant isolation**: Respects tenant boundaries
 
 **Response**:
 ```json
@@ -429,7 +440,7 @@ Authorization: Bearer <your-token>
 Search entities with enhanced filtering, sorting, and optional image inclusion.
 
 ```http
-GET /api/entities/search?q=house&category=property&price[min]=100000&sort_by=created_at&sort_order=desc&include_images=true
+GET /api/entities/search?q=house&category=property&price[min]=100000&price[max]=500000&bedrooms=3&make=Toyota&year=2020&sort_by=created_at&sort_order=desc&include_images=true
 ```
 
 **Query Parameters**:
@@ -440,7 +451,10 @@ GET /api/entities/search?q=house&category=property&price[min]=100000&sort_by=cre
 - `sort_by` (optional): Sort field (default: created_at)
 - `sort_order` (optional): asc or desc (default: desc)
 - `include_images` (optional): Include image thumbnails (default: false)
-- `[attribute][operator]`: Attribute filters (e.g., `price[min]=100000`)
+- **Attribute Filters**:
+  - **Exact match**: `attribute_name=value` (e.g., `make=Toyota`, `color=red`)
+  - **Range filters**: `attribute_name[min]=value` and `attribute_name[max]=value` (e.g., `price[min]=100000`, `year[max]=2023`)
+  - **Combined**: Multiple filters can be combined (e.g., `make=Toyota&year=2020&price[min]=15000`)
 
 **Response**:
 ```json

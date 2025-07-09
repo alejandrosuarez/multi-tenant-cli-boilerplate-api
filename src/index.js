@@ -465,6 +465,12 @@ fastify.post('/api/entities/:id/images', {
       reply.status(404);
       return { error: 'Entity not found or access denied' };
     }
+    
+    // SECURITY: Only allow entity owners to upload images
+    if (entityResult.data.owner_id !== request.user.id) {
+      reply.status(403);
+      return { error: 'Only entity owners can upload images' };
+    }
 
     // Get uploaded files
     const files = await request.saveRequestFiles();
@@ -476,14 +482,14 @@ fastify.post('/api/entities/:id/images', {
 
     const uploadResults = [];
     
+    // Get label from form data if provided
+    const label = request.body?.label || null;
+    
     for (const file of files) {
       // Validate file type
       if (!file.mimetype.startsWith('image/')) {
         continue; // Skip non-image files
       }
-
-      // Get label from form data if provided
-      const label = request.body?.label || null;
       
       // Upload and optimize image
       const result = await imageService.uploadImage(
