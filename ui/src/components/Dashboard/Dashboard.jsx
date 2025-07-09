@@ -1,21 +1,28 @@
 import { useState, useEffect } from 'react';
-import { entitiesAPI, categoriesAPI } from '../../services/api';
+import { entitiesAPI, categoriesAPI, authAPI } from '../../services/api';
 import EntityList from './EntityList';
-import EntityForm from './EntityForm';
+import EntityModal from './EntityModal';
+import LogsViewer from './LogsViewer';
 import { useRealtime } from '../../hooks/useRealtime';
-import { Container, Row, Col, Card, Button, Form, Alert, Spinner } from 'react-bootstrap';
+import { logsAPI } from '../../services/api';
+import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Dropdown, ButtonGroup } from 'react-bootstrap';
+import { EntityListSkeleton, DashboardHeaderSkeleton, FormSkeleton, NavSkeleton } from '../UI/Skeleton';
 
 const Dashboard = ({ user, onLogout }) => {
   const [entities, setEntities] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [editingEntity, setEditingEntity] = useState(null);
+  const [showEntityModal, setShowEntityModal] = useState(false);
+  const [modalMode, setModalMode] = useState('create'); // 'create', 'edit', 'view'
+  const [selectedEntity, setSelectedEntity] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+  const [logs, setLogs] = useState([]);
+  const [showLogs, setShowLogs] = useState(false);
+  const [selectedEntityForLogs, setSelectedEntityForLogs] = useState(null);
 
   const tenantId = user.tenant || 'default';
 
@@ -76,30 +83,39 @@ const Dashboard = ({ user, onLogout }) => {
     }
   };
 
+  const handleShowLogs = (entityId) => {
+    setSelectedEntityForLogs(entityId);
+    setShowLogs(true);
+  };
+  
+  const handleShowMyLogs = () => {
+    setSelectedEntityForLogs(null); // null means show user's logs
+    setShowLogs(true);
+  };
+
   const handleCreateEntity = async (entityData) => {
     console.log('handleCreateEntity called', entityData);
     try {
       await entitiesAPI.create(entityData, tenantId);
-      console.log('Entity created successfully, setting showForm to false');
-      setShowForm(false);
+      console.log('Entity created successfully');
       loadEntities();
     } catch (err) {
       setError('Failed to create entity');
       console.error('Create entity error:', err);
+      throw err; // Re-throw to let modal handle the error
     }
   };
 
   const handleUpdateEntity = async (entityData) => {
     console.log('handleUpdateEntity called', entityData);
     try {
-      await entitiesAPI.update(editingEntity.id, entityData, tenantId);
-      console.log('Entity updated successfully, setting showForm to false');
-      setShowForm(false);
-      setEditingEntity(null);
+      await entitiesAPI.update(selectedEntity.id, entityData, tenantId);
+      console.log('Entity updated successfully');
       loadEntities();
     } catch (err) {
       setError('Failed to update entity');
       console.error('Update entity error:', err);
+      throw err; // Re-throw to let modal handle the error
     }
   };
 
@@ -119,146 +135,268 @@ const Dashboard = ({ user, onLogout }) => {
 
   const handleEdit = (entity) => {
     console.log('handleEdit called', entity);
-    setEditingEntity(entity);
-    setShowForm(true);
+    setSelectedEntity(entity);
+    setModalMode('edit');
+    setShowEntityModal(true);
   };
 
-  const handleLogout = () => {
+  const handleView = (entity) => {
+    console.log('handleView called', entity);
+    setSelectedEntity(entity);
+    setModalMode('view');
+    setShowEntityModal(true);
+  };
+
+  const handleCreate = () => {
+    console.log('handleCreate called');
+    setSelectedEntity(null);
+    setModalMode('create');
+    setShowEntityModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowEntityModal(false);
+    setSelectedEntity(null);
+    setModalMode('create');
+  };
+
+  const handleLogout = async () => {
     console.log('handleLogout called');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    onLogout();
+    try {
+      // Call the API logout endpoint to properly end the session
+      await authAPI.logout();
+    } catch (err) {
+      console.error('Logout API call failed:', err);
+      // Continue with local logout even if API call fails
+    } finally {
+      // Always clear local storage and update state
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      onLogout();
+    }
   };
 
   return (
-    <Container className="main-layout py-4">
-      <Card className="mb-4 shadow-sm">
-        <Card.Body>
+    <div className="dashboard-container">
+      <Container className="main-layout py-4">
+{/* Dashboard Header */}
+        {loading ? <DashboardHeaderSkeleton /> : (
+        <div className="dashboard-header neumorphic-card mb-4">
           <Row className="align-items-center">
             <Col>
-              <h1 className="mb-1">Dashboard</h1>
-              <p className="text-muted mb-0">Welcome back, {user.email}!</p>
-              <p className="text-muted small mb-0">Tenant: {tenantId}</p>
+              <div className="user-info">
+                <div className="user-avatar">
+                  <i className="fas fa-user-circle" style={{ fontSize: '2.5rem', color: '#0d6efd' }}></i>
+                </div>
+                <div className="user-details">
+                  <h1 className="dashboard-title">
+                    <i className="fas fa-tachometer-alt me-2"></i>
+                    Dashboard
+                  </h1>
+                  <p className="user-welcome">Welcome back, {user.email}!</p>
+                  <div className="tenant-info">
+                    <Badge bg="secondary" className="tenant-badge">
+                      <i className="fas fa-building me-1"></i>
+                      {tenantId}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
             </Col>
             <Col xs="auto">
-              <Button variant="outline-secondary" onClick={handleLogout}>
-                Logout
-              </Button>
+              <Dropdown>
+                <Dropdown.Toggle variant="outline-secondary" className="user-menu-btn">
+                  <i className="fas fa-cog me-1"></i>
+                  Settings
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                  <Dropdown.Item onClick={handleShowMyLogs}>
+                    <i className="fas fa-history me-2"></i>
+                    View My Activity
+                  </Dropdown.Item>
+                  <Dropdown.Divider />
+                  <Dropdown.Item onClick={handleLogout}>
+                    <i className="fas fa-sign-out-alt me-2"></i>
+                    Logout
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
             </Col>
           </Row>
-        </Card.Body>
-      </Card>
+        </div>
+        )}
 
-      {error && <Alert variant="danger">{error}</Alert>}
+        {error && (
+          <Alert variant="danger" className="dashboard-alert">
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            {error}
+          </Alert>
+        )}
 
-      <Row>
-        <Col lg={showForm ? 6 : 12}>
-          <Card className="mb-4 shadow-sm">
-            <Card.Body>
-              {categories.length > 0 && (
-                <Form.Group className="mb-3">
-                  <Form.Label className="fw-bold">Filter by Category</Form.Label>
-                  <Form.Select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.name}>
-                        {category.display_name || category.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              )}
-              
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h2>My Entities</h2>
-                <div className="d-flex gap-2">
-                  <Button 
-                    variant={isRealtimeActive ? 'primary' : 'outline-secondary'}
-                    onClick={toggleRealtime}
-                    title={isRealtimeActive ? 'Disable auto-refresh' : 'Enable auto-refresh'}
-                  >
-                    {isRealtimeActive ? '🔄 Live' : '⏸️ Paused'}
-                  </Button>
-                  <Button 
-                    variant="primary" 
-                    onClick={() => setShowForm(true)} 
-                  >
-                    Add Entity
-                  </Button>
+        <Row>
+          <Col lg={12}>
+            <div className="entities-section neumorphic-card">
+              {/* Section Header */}
+              <div className="section-header">
+                <div className="section-title">
+                  <h2>
+                    <i className="fas fa-cube me-2"></i>
+                    My Entities
+                  </h2>
+                  <p className="section-subtitle">Manage your entities and view activity</p>
+                </div>
+                
+                <div className="section-actions">
+                  <ButtonGroup className="me-2">
+                    <Button 
+                      variant={isRealtimeActive ? 'success' : 'outline-secondary'}
+                      onClick={toggleRealtime}
+                      title={isRealtimeActive ? 'Disable auto-refresh' : 'Enable auto-refresh'}
+                      className="realtime-btn"
+                    >
+                      <i className={`fas ${isRealtimeActive ? 'fa-sync-alt' : 'fa-pause'} me-1`}></i>
+                      {isRealtimeActive ? 'Live' : 'Paused'}
+                    </Button>
+                  </ButtonGroup>
+                  
+                  <ButtonGroup>
+                    <Button 
+                      variant="outline-info" 
+                      onClick={handleShowMyLogs}
+                      title="View My Activity Logs"
+                    >
+                      <i className="fas fa-chart-line me-1"></i>
+                      Activity
+                    </Button>
+                    <Button 
+                      variant="primary" 
+                      onClick={handleCreate}
+                      title="Create New Entity"
+                    >
+                      <i className="fas fa-plus me-1"></i>
+                      Add Entity
+                    </Button>
+                  </ButtonGroup>
                 </div>
               </div>
               
-              <Form.Group className="mb-3">
-                <Form.Control
-                  type="text"
-                  placeholder="Search entities..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </Form.Group>
+              {/* Filters Section */}
+              <div className="filters-section">
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="filter-label">
+                        <i className="fas fa-search me-1"></i>
+                        Search Entities
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="Search by name, type, or attributes..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="neumorphic-input"
+                      />
+                    </Form.Group>
+                  </Col>
+                  
+                  {categories.length > 0 && (
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label className="filter-label">
+                          <i className="fas fa-filter me-1"></i>
+                          Filter by Category
+                        </Form.Label>
+                        <Form.Select
+                          value={selectedCategory}
+                          onChange={(e) => setSelectedCategory(e.target.value)}
+                          className="neumorphic-input"
+                        >
+                          <option value="">All Categories</option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.name}>
+                              {category.display_name || category.name}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                  )}
+                </Row>
+              </div>
 
-              {loading ? (
-                <div className="text-center py-4">
-                  <Spinner animation="border" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </Spinner>
-                </div>
+              {/* Entities Content */}
+              <div className="entities-content">
+{loading ? (
+                <EntityListSkeleton />
               ) : (
                 <>
                   <EntityList
                     entities={entities}
                     onEdit={handleEdit}
+                    onView={handleView}
                     onDelete={handleDeleteEntity}
+                    onShowLogs={handleShowLogs}
                     tenantId={tenantId}
                   />
                   
                   {/* Pagination */}
                   {pagination && pagination.totalPages > 1 && (
-                    <div className="d-flex justify-content-center gap-2 mt-3">
-                      <Button
-                        onClick={() => loadEntities(currentPage - 1)}
-                        disabled={currentPage <= 1}
-                        variant="outline-secondary"
-                      >
-                        Previous
-                      </Button>
-                      <span className="align-self-center text-muted small">
-                        Page {currentPage} of {pagination.totalPages}
-                      </span>
-                      <Button
-                        onClick={() => loadEntities(currentPage + 1)}
-                        disabled={currentPage >= pagination.totalPages}
-                        variant="outline-secondary"
-                      >
-                        Next
-                      </Button>
+                    <div className="pagination-section">
+                      <div className="pagination-controls">
+                        <Button
+                          onClick={() => loadEntities(currentPage - 1)}
+                          disabled={currentPage <= 1}
+                          variant="outline-secondary"
+                          className="pagination-btn"
+                        >
+                          <i className="fas fa-chevron-left me-1"></i>
+                          Previous
+                        </Button>
+                        
+                        <div className="pagination-info">
+                          <span className="current-page">{currentPage}</span>
+                          <span className="page-separator">of</span>
+                          <span className="total-pages">{pagination.totalPages}</span>
+                        </div>
+                        
+                        <Button
+                          onClick={() => loadEntities(currentPage + 1)}
+                          disabled={currentPage >= pagination.totalPages}
+                          variant="outline-secondary"
+                          className="pagination-btn"
+                        >
+                          Next
+                          <i className="fas fa-chevron-right ms-1"></i>
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </>
               )}
-            </Card.Body>
-          </Card>
-        </Col>
-
-        {showForm && (
-          <Col lg={6}>
-            <EntityForm
-              entity={editingEntity}
-              tenantId={tenantId}
-              onSubmit={editingEntity ? handleUpdateEntity : handleCreateEntity}
-              onCancel={() => {
-                console.log('EntityForm onCancel called, setting showForm to false');
-                setShowForm(false);
-                setEditingEntity(null);
-              }}
-            />
+              </div>
+            </div>
           </Col>
-        )}
-      </Row>
-    </Container>
+
+        {/* Entity Modal */}
+        <EntityModal
+          show={showEntityModal}
+          onHide={handleModalClose}
+          entity={selectedEntity}
+          tenantId={tenantId}
+          mode={modalMode}
+          onSubmit={modalMode === 'edit' ? handleUpdateEntity : handleCreateEntity}
+        />
+        </Row>
+        
+        {/* Enhanced Logs Viewer Modal */}
+        <LogsViewer
+          show={showLogs}
+          onHide={() => setShowLogs(false)}
+          entityId={selectedEntityForLogs}
+          title={selectedEntityForLogs ? "Entity Activity Logs" : "My Activity Dashboard"}
+        />
+      </Container>
+    </div>
   );
 };
 

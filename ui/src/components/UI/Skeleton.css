@@ -1,0 +1,28 @@
+/* Skeleton loading styles */
+
+.skeleton {
+  background: linear-gradient(90deg, #e0e5ec, #d0d5dc, #e0e5ec);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite ease-in-out;
+  border-radius: 10px;
+}
+
+.skeleton-card {
+  margin-bottom: 1rem;
+  background: #e0e5ec;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 
+    20px 20px 40px #c2c8d0,
+    -20px -20px 40px #ffffff;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+

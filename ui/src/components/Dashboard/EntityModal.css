@@ -1,0 +1,85 @@
+/* Styles for EntityModal component */
+
+.entity-modal .modal-content {
+  background: linear-gradient(135deg, #e0e5ec 0%, #f0f5fa 100%);
+  border-radius: 20px;
+  box-shadow: 25px 25px 50px #c2c8d0, -25px -25px 50px #ffffff;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.entity-modal-header {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.entity-modal-body {
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.entity-modal-footer {
+  border-top: 1px solid #dee2e6;
+}
+
+.entity-tabs .tab-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 15px;
+}
+
+.tab-btn.active {
+  background: #f0f5fa;
+  box-shadow: inset 3px 3px 6px #c8ccd1, inset -3px -3px 6px #ffffff;
+}
+
+.tab-content {
+  padding: 1rem 0;
+}
+
+.existing-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.existing-image-item {
+  position: relative;
+}
+
+.existing-image-item .image-container {
+  position: relative;
+}
+
+.existing-image-item .image-remove-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+.selected-files .file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: #f0f5fa;
+  box-shadow: 3px 3px 6px #c8ccd1;
+  margin-bottom: 5px;
+}
+
+.file-remove-btn {
+  background: transparent;
+  border: none;
+  color: #ff5c5c;
+  cursor: pointer;
+}
+

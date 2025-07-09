@@ -1,0 +1,291 @@
+/* Entity Details Page Styles - Using neumorphic theme from auth/public layout */
+
+.entity-details-page {
+  background: linear-gradient(135deg, #e0e5ec 0%, #f0f5fa 100%);
+  min-height: 100vh;
+  padding: 2rem 1rem;
+}
+
+.entity-details-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Back button using neumorphic button style */
+.back-btn {
+  background: #e0e5ec;
+  border: none;
+  border-radius: 15px;
+  padding: 12px 24px;
+  box-shadow: 
+    8px 8px 16px #c2c8d0,
+    -8px -8px 16px #ffffff;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-weight: 500;
+  color: #495057;
+}
+
+.back-btn:hover {
+  box-shadow: 
+    12px 12px 24px #c2c8d0,
+    -12px -12px 24px #ffffff;
+  color: #0d6efd;
+}
+
+.entity-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* All cards using neumorphic-card style */
+.entity-header-card,
+.entity-images-card,
+.entity-attributes-card,
+.entity-info-card,
+.entity-actions-card {
+  background: #e0e5ec;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 
+    20px 20px 40px #c2c8d0,
+    -20px -20px 40px #ffffff;
+  border: none;
+  transition: all 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+.entity-header-card:hover,
+.entity-images-card:hover,
+.entity-attributes-card:hover {
+  box-shadow: 
+    25px 25px 50px #c2c8d0,
+    -25px -25px 50px #ffffff;
+}
+
+/* Entity title styling */
+.entity-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.entity-description {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-bottom: 0;
+  line-height: 1.6;
+}
+
+.entity-info {
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Images - keeping neumorphic background */
+.single-image-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  max-height: 500px;
+  overflow: hidden;
+  background: #f0f5fa;
+  border-radius: 15px;
+  box-shadow: 
+    inset 5px 5px 10px #c8ccd1,
+    inset -5px -5px 10px #ffffff;
+}
+
+.single-entity-image {
+  max-height: 500px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.image-label {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
+  background: rgba(44, 62, 80, 0.8);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 10px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.carousel-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  background: #f0f5fa;
+  border-radius: 15px;
+  box-shadow: 
+    inset 5px 5px 10px #c8ccd1,
+    inset -5px -5px 10px #ffffff;
+}
+
+.carousel-entity-image {
+  max-height: 400px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+/* Attributes using neumorphic input style */
+.attribute-item {
+  background: #e0e5ec;
+  border-radius: 15px;
+  padding: 1rem;
+  box-shadow: 
+    inset 8px 8px 16px #c8ccd1,
+    inset -8px -8px 16px #f0f5fa;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.attribute-label {
+  font-weight: 600;
+  color: #495057;
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.attribute-value {
+  color: #2c3e50;
+  font-size: 1rem;
+  word-wrap: break-word;
+}
+
+.attribute-value code {
+  background: #f0f5fa;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+/* Sidebar */
+.entity-sidebar {
+  position: sticky;
+  top: 20px;
+}
+
+/* Info items */
+.info-item {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.info-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #6c757d;
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.info-value {
+  color: #2c3e50;
+  font-size: 0.95rem;
+  word-wrap: break-word;
+}
+
+.info-value code {
+  background: #f0f5fa;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* Card headers - neumorphic style */
+.entity-details-page .card-header {
+  background: #f0f5fa;
+  border-bottom: 1px solid #dee2e6;
+  border-radius: 15px 15px 0 0;
+  padding: 1rem 1.5rem;
+  margin: -2rem -2rem 1rem -2rem;
+}
+
+.entity-details-page .card-header h5,
+.entity-details-page .card-header h6 {
+  color: #495057;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Action buttons - neumorphic style */
+.entity-actions-card .btn {
+  background: #e0e5ec;
+  border: none;
+  border-radius: 15px;
+  padding: 12px 24px;
+  box-shadow: 
+    8px 8px 16px #c2c8d0,
+    -8px -8px 16px #ffffff;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-weight: 500;
+  color: #495057;
+}
+
+.entity-actions-card .btn:hover {
+  box-shadow: 
+    12px 12px 24px #c2c8d0,
+    -12px -12px 24px #ffffff;
+  color: #0d6efd;
+}
+
+/* Responsive design */
+@media (max-width: 992px) {
+  .entity-sidebar {
+    position: static;
+    margin-top: 2rem;
+  }
+  
+  .entity-title {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .entity-details-page {
+    padding: 1rem 0.5rem;
+  }
+  
+  .entity-title {
+    font-size: 1.5rem;
+  }
+  
+  .entity-header-card,
+  .entity-images-card,
+  .entity-attributes-card,
+  .entity-info-card,
+  .entity-actions-card {
+    padding: 1.5rem;
+  }
+  
+  .single-image-container,
+  .carousel-image-container {
+    height: 250px;
+  }
+  
+  .single-entity-image,
+  .carousel-entity-image {
+    max-height: 250px;
+  }
+}

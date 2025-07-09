@@ -39,10 +39,10 @@ export const authAPI = {
 
 export const entitiesAPI = {
   getAll: (tenantId, page = 1, limit = 20) => api.get(`/api/entities?page=${page}&limit=${limit}`, {
-    headers: { 'X-Tenant-ID': tenantId }
+    headers: tenantId ? { 'X-Tenant-ID': tenantId } : {}
   }),
   getById: (id, tenantId) => api.get(`/api/entities/${id}`, {
-    headers: { 'X-Tenant-ID': tenantId }
+    headers: tenantId ? { 'X-Tenant-ID': tenantId } : {}
   }),
   create: (data, tenantId) => api.post('/api/entities', data, {
     headers: { 'X-Tenant-ID': tenantId }
@@ -54,7 +54,7 @@ export const entitiesAPI = {
     headers: { 'X-Tenant-ID': tenantId }
   }),
   search: (query, tenantId, page = 1, limit = 20) => api.get(`/api/entities/search?q=${query}&page=${page}&limit=${limit}`, {
-    headers: { 'X-Tenant-ID': tenantId }
+    headers: tenantId ? { 'X-Tenant-ID': tenantId } : {}
   }),
   getMyEntities: (tenantId, page = 1, limit = 20) => api.get(`/api/my/entities?page=${page}&limit=${limit}`, {
     headers: { 'X-Tenant-ID': tenantId }
@@ -63,10 +63,10 @@ export const entitiesAPI = {
 
 export const categoriesAPI = {
   getAll: (tenantId) => api.get('/api/categories', {
-    headers: { 'X-Tenant-ID': tenantId }
+    headers: tenantId ? { 'X-Tenant-ID': tenantId } : {}
   }),
   getEntitiesByCategory: (category, tenantId, page = 1, limit = 20) => api.get(`/api/categories/${category}/entities?page=${page}&limit=${limit}`, {
-    headers: { 'X-Tenant-ID': tenantId }
+    headers: tenantId ? { 'X-Tenant-ID': tenantId } : {}
   })
 };
 
@@ -88,11 +88,36 @@ export const mediaAPI = {
     });
   },
   getEntityImages: (entityId, tenantId, size = 'medium') => api.get(`/api/entities/${entityId}/images?size=${size}`, {
-    headers: { 'X-Tenant-ID': tenantId }
+    headers: tenantId ? { 'X-Tenant-ID': tenantId } : {}
   }),
   deleteImage: (imageId, tenantId) => api.delete(`/api/images/${imageId}`, {
-    headers: { 'X-Tenant-ID': tenantId }
+    headers: tenantId ? { 'X-Tenant-ID': tenantId } : {}
   })
+};
+
+export const logsAPI = {
+  // Get user's interaction logs
+  getMyInteractions: (page = 1, limit = 50, eventType = null) => {
+    let url = `/api/my/interactions?page=${page}&limit=${limit}`;
+    if (eventType) url += `&event_type=${eventType}`;
+    return api.get(url);
+  },
+  
+  // Get logs for a specific entity (only accessible by entity owners)
+  getEntityLogs: (entityId, page = 1, limit = 50, eventType = null) => {
+    let url = `/api/entities/${entityId}/logs?page=${page}&limit=${limit}`;
+    if (eventType) url += `&event_type=${eventType}`;
+    return api.get(url);
+  },
+  
+  // Log a custom interaction event
+  logInteraction: (eventType, entityId = null, eventPayload = {}) => {
+    return api.post('/api/interaction_logs', {
+      eventType,
+      entityId,
+      eventPayload
+    });
+  }
 };
 
 export default api;

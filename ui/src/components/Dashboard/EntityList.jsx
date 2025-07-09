@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { mediaAPI } from '../../services/api';
-import { Card, Button, Row, Col, Badge, Spinner } from 'react-bootstrap';
+import { Card, Button, Row, Col, Badge, Spinner, Image } from 'react-bootstrap';
 
-const EntityList = ({ entities, onEdit, onDelete, tenantId }) => {
+const EntityList = ({ entities, onEdit, onView, onDelete, tenantId, onShowLogs }) => {
   const [entityImages, setEntityImages] = useState({});
   const [loadingImages, setLoadingImages] = useState({});
 
@@ -40,89 +40,138 @@ const EntityList = ({ entities, onEdit, onDelete, tenantId }) => {
 
   if (entities.length === 0) {
     return (
-      <div className="text-center py-5 text-muted">
-        <p>No entities found</p>
+      <div className="entity-list-empty">
+        <div className="neumorphic-card p-5 text-center">
+          <div className="mb-3">
+            <i className="fas fa-box-open" style={{ fontSize: '3rem', color: '#6c757d' }}></i>
+          </div>
+          <h5 className="text-muted mb-2">No entities found</h5>
+          <p className="text-muted small">Start by creating your first entity</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <Row xs={1} md={2} lg={3} className="g-4">
-      {entities.map((entity) => (
-        <Col key={entity.id} className="d-flex">
-          <Card className="shadow-sm w-100">
-            <Card.Body className="d-flex flex-column">
-              <div className="d-flex justify-content-between align-items-start mb-3">
-                <div className="flex-grow-1">
-                  <Card.Title className="mb-2">{entity.attributes.name || 'Unnamed Entity'}</Card.Title>
-                  
-                  {entity.entity_type && (
-                    <div className="mb-2">
-                      <Badge bg="info">{entity.entity_type}</Badge>
-                    </div>
-                  )}
-                  
-                  {entity.attributes.description && (
-                    <Card.Text className="text-muted mb-2">{entity.attributes.description}</Card.Text>
-                  )}
-                  
-                  {entity.attributes && Object.keys(entity.attributes).length > 0 && (
-                    <div className="mb-2">
-                      <h6 className="mb-1">Attributes:</h6>
-                      {Object.entries(entity.attributes).map(([key, value]) => (
-                        <p key={key} className="text-muted small mb-0">
-                          <strong>{key}:</strong> {String(value)}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-
+    <div className="entity-list-container">
+      <Row xs={1} md={2} lg={3} className="g-4">
+        {entities.map((entity) => (
+          <Col key={entity.id} className="d-flex">
+            <div className="entity-card neumorphic-card h-100 w-100">
+              {/* Header with image and main info */}
+              <div className="entity-card-header">
+                <div className="entity-image-container">
                   {loadingImages[entity.id] ? (
-                    <div className="text-center py-3">
+                    <div className="image-placeholder">
                       <Spinner animation="border" size="sm" />
                     </div>
                   ) : entityImages[entity.id] ? (
-                    <div className="mb-2">
-                      <Card.Img 
-                        variant="top" 
-                        src={entityImages[entity.id].url}
-                        alt={entity.name}
-                        style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'cover' }}
-                        className="rounded shadow-sm"
-                      />
+                    <Image 
+                      src={entityImages[entity.id].url}
+                      alt={entity.attributes.name || 'Entity'}
+                      className="entity-image"
+                      fluid
+                      rounded
+                    />
+                  ) : (
+                    <div className="image-placeholder">
+                      <i className="fas fa-image" style={{ fontSize: '1.5rem', color: '#6c757d' }}></i>
                     </div>
-                  ) : null}
-
-                  <Card.Text className="text-muted small mt-auto">
-                    Created: {new Date(entity.created_at).toLocaleDateString()}
-                    {entity.updated_at !== entity.created_at && (
-                      <span> • Updated: {new Date(entity.updated_at).toLocaleDateString()}</span>
-                    )}
-                  </Card.Text>
+                  )}
                 </div>
+                
+                <div className="entity-main-info">
+                  <div className="entity-title-row">
+                    <h5 className="entity-title">{entity.attributes.name || 'Unnamed Entity'}</h5>
+                    {entity.entity_type && (
+                      <Badge bg="primary" pill className="entity-type-badge">
+                        {entity.entity_type}
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {entity.attributes.description && (
+                    <p className="entity-description">{entity.attributes.description}</p>
+                  )}
+                </div>
+              </div>
 
-                <div className="d-flex flex-column gap-2 ms-3">
+              {/* Attributes section */}
+              {entity.attributes && Object.keys(entity.attributes).filter(key => key !== 'name' && key !== 'description').length > 0 && (
+                <div className="entity-attributes">
+                  <h6 className="attributes-title">Details</h6>
+                  <div className="attributes-grid">
+                    {Object.entries(entity.attributes)
+                      .filter(([key]) => key !== 'name' && key !== 'description')
+                      .map(([key, value]) => (
+                        <div key={key} className="attribute-item">
+                          <span className="attribute-key">{key}:</span>
+                          <span className="attribute-value">{String(value)}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer with metadata and actions */}
+              <div className="entity-card-footer">
+                <div className="entity-metadata">
+                  <small className="text-muted">
+                    <i className="fas fa-calendar-plus me-1"></i>
+                    Created: {new Date(entity.created_at).toLocaleDateString()}
+                  </small>
+                  {entity.updated_at !== entity.created_at && (
+                    <small className="text-muted">
+                      <i className="fas fa-calendar-edit me-1"></i>
+                      Updated: {new Date(entity.updated_at).toLocaleDateString()}
+                    </small>
+                  )}
+                </div>
+                
+                <div className="entity-actions">
+                  <Button
+                    variant="outline-info"
+                    size="sm"
+                    className="action-btn"
+                    onClick={() => onShowLogs?.(entity.id)}
+                    title="View Activity Logs"
+                  >
+                    <i className="fas fa-chart-line"></i>
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    className="action-btn"
+                    onClick={() => onView?.(entity)}
+                    title="Quick View"
+                  >
+                    <i className="fas fa-eye"></i>
+                  </Button>
                   <Button
                     variant="outline-primary"
                     size="sm"
+                    className="action-btn"
                     onClick={() => onEdit(entity)}
+                    title="Edit Entity"
                   >
-                    Edit
+                    <i className="fas fa-edit"></i>
                   </Button>
                   <Button
                     variant="outline-danger"
                     size="sm"
+                    className="action-btn"
                     onClick={() => onDelete(entity.id)}
+                    title="Delete Entity"
                   >
-                    Delete
+                    <i className="fas fa-trash"></i>
                   </Button>
                 </div>
               </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      ))}
-    </Row>
+            </div>
+          </Col>
+        ))}
+      </Row>
+    </div>
   );
 };
 

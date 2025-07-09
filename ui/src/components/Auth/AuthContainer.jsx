@@ -3,23 +3,42 @@ import { Container, Card } from 'react-bootstrap';
 
 const AuthContainer = ({ onAuth }) => {
   return (
-    <Container className="d-flex justify-content-center align-items-center min-vh-100">
-      <Card className="shadow-lg p-4" style={{ width: '450px', maxWidth: '90vw' }}>
-        <Card.Body>
-          <div className="text-center mb-4">
-            <h1 className="text-dark mb-2">Multi-Tenant CLI</h1>
-            <p className="text-muted small">Secure access with email verification</p>
+    <div className="auth-container">
+      <Container>
+        <div className="auth-card neumorphic-card">
+          <div className="auth-header">
+            <div className="brand-section">
+              <div className="brand-icon">
+                <i className="fas fa-cube" style={{ fontSize: '3rem', color: '#0d6efd' }}></i>
+              </div>
+              <h1 className="brand-title">Multi-Tenant CLI</h1>
+              <p className="brand-subtitle">Secure access with email verification</p>
+            </div>
           </div>
 
-          <OTPLogin onLogin={onAuth} />
-          
-          <div className="text-center mt-4 small text-muted">
-            <p>🔐 We use email-based authentication for security</p>
-            <p>No passwords required - just verify your email</p>
+          <div className="auth-content">
+            <OTPLogin onLogin={onAuth} />
           </div>
-        </Card.Body>
-      </Card>
-    </Container>
+          
+          <div className="auth-footer">
+            <div className="security-features">
+              <div className="feature-item">
+                <i className="fas fa-shield-alt"></i>
+                <span>Email-based authentication</span>
+              </div>
+              <div className="feature-item">
+                <i className="fas fa-key"></i>
+                <span>No passwords required</span>
+              </div>
+              <div className="feature-item">
+                <i className="fas fa-clock"></i>
+                <span>Quick verification</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Container>
+    </div>
   );
 };
 
