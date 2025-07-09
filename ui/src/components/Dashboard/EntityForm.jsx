@@ -262,14 +262,15 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
                 </h5>
               </div>
 
-              <Row>
+              <div className="attributes-grid-form">
                 {Object.entries(formData.attributes)
                   .filter(([key]) => key !== 'name' && key !== 'description')
                   .map(([key, value]) => (
-                    <Col md={6} key={key}>
-                      <Form.Group className="mb-3">
+                    <div key={key} className="attribute-form-item">
+                      <Form.Group className="form-group">
                         <Form.Label className="form-label">
-                          {key.charAt(0).toUpperCase() + key.slice(1)}
+                          <i className="fas fa-tag"></i>
+                          {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
                         </Form.Label>
                         <Form.Control
                           type="text"
@@ -277,12 +278,12 @@ const EntityForm = ({ entity, tenantId, onSubmit, onCancel }) => {
                           value={value || ''}
                           onChange={handleAttributeChange}
                           className="neumorphic-input"
-                          placeholder={`Enter ${key}`}
+                          placeholder={`Enter ${key.toLowerCase().replace(/([A-Z])/g, ' $1')}`}
                         />
                       </Form.Group>
-                    </Col>
+                    </div>
                   ))}
-              </Row>
+              </div>
             </div>
           )}
 

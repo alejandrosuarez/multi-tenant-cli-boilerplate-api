@@ -313,22 +313,24 @@ const EntityModal = ({
         if (attributeKeys.length === 0) {
           return (
             <div className="tab-content">
-              <div className="text-center text-muted py-4">
-                <i className="fas fa-info-circle fa-2x mb-2"></i>
-                <p>No additional attributes for this entity type.</p>
+              <div className="no-attributes-message">
+                <i className="fas fa-info-circle"></i>
+                <h6>No additional attributes available</h6>
+                <p>This entity type doesn't have additional configurable attributes beyond name and description.</p>
               </div>
             </div>
           );
         }
 
         return (
-          <div className="tab-content">
-            <Row>
+          <div className="tab-content attributes-tab">
+            <div className="attributes-grid-form">
               {attributeKeys.map(key => (
-                <Col md={6} key={key}>
-                  <Form.Group className="mb-3">
+                <div key={key} className="attribute-form-item">
+                  <Form.Group className="form-group">
                     <Form.Label className="form-label">
-                      {key.charAt(0).toUpperCase() + key.slice(1)}
+                      <i className="fas fa-tag"></i>
+                      {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
                     </Form.Label>
                     <Form.Control
                       type="text"
@@ -336,13 +338,13 @@ const EntityModal = ({
                       value={formData.attributes[key] || ''}
                       onChange={handleAttributeChange}
                       className="neumorphic-input"
-                      placeholder={`Enter ${key}`}
+                      placeholder={`Enter ${key.toLowerCase().replace(/([A-Z])/g, ' $1')}`}
                       disabled={isReadOnly}
                     />
                   </Form.Group>
-                </Col>
+                </div>
               ))}
-            </Row>
+            </div>
           </div>
         );
 

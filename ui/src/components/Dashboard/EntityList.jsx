@@ -99,16 +99,35 @@ const EntityList = ({ entities, onEdit, onView, onDelete, tenantId, onShowLogs }
               {/* Attributes section */}
               {entity.attributes && Object.keys(entity.attributes).filter(key => key !== 'name' && key !== 'description').length > 0 && (
                 <div className="entity-attributes">
-                  <h6 className="attributes-title">Details</h6>
+                  <h6 className="attributes-title">
+                    <i className="fas fa-list-ul me-2"></i>
+                    Additional Details
+                  </h6>
                   <div className="attributes-grid">
                     {Object.entries(entity.attributes)
                       .filter(([key]) => key !== 'name' && key !== 'description')
+                      .slice(0, 4) // Limit to first 4 attributes to prevent overflow
                       .map(([key, value]) => (
                         <div key={key} className="attribute-item">
-                          <span className="attribute-key">{key}:</span>
-                          <span className="attribute-value">{String(value)}</span>
+                          <span className="attribute-key">
+                            {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                          </span>
+                          <span className="attribute-value" title={String(value)}>
+                            {String(value) || 'N/A'}
+                          </span>
                         </div>
                       ))}
+                    {Object.keys(entity.attributes).filter(key => key !== 'name' && key !== 'description').length > 4 && (
+                      <div className="attribute-item more-attributes">
+                        <span className="attribute-key text-muted">
+                          <i className="fas fa-ellipsis-h me-1"></i>
+                          More
+                        </span>
+                        <span className="attribute-value text-muted">
+                          +{Object.keys(entity.attributes).filter(key => key !== 'name' && key !== 'description').length - 4}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
