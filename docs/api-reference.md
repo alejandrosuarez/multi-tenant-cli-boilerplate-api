@@ -720,6 +720,146 @@ curl -X GET http://localhost:3000/api/auth/me \
 
 ---
 
-**📅 Last Updated**: July 7, 2025  
+---
+
+## 📊 Logs & Analytics
+
+### Get My Interactions
+Retrieve interaction logs for the authenticated user.
+
+```http
+GET /api/my/interactions?page=1&limit=50&event_type=entity_viewed
+Authorization: Bearer <your-token>
+```
+
+**Query Parameters**:
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 50, max: 100)
+- `event_type` (optional): Filter by specific event type
+
+**Response**:
+```json
+{
+  "interactions": [
+    {
+      "id": "log-uuid",
+      "event_type": "entity_viewed",
+      "entity_id": "entity-uuid",
+      "user_id": "user-id",
+      "tenant_context": "default",
+      "event_payload": {
+        "source": "search",
+        "filters": {"category": "vehicle"}
+      },
+      "timestamp": "2025-07-09T12:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 1,
+    "has_more": false
+  },
+  "user_id": "user-id",
+  "tenant": "default"
+}
+```
+
+---
+
+### Get Entity Logs
+Retrieve interaction logs for a specific entity (entity owners only).
+
+```http
+GET /api/entities/:id/logs?page=1&limit=50&event_type=entity_viewed
+Authorization: Bearer <your-token>
+```
+
+**Security Requirements**:
+- ✅ **Authentication required**: Must be logged in
+- ✅ **Ownership required**: Only entity owners can view logs
+- ✅ **Entity must exist**: Entity must exist and be accessible
+
+**Query Parameters**:
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 50, max: 100)
+- `event_type` (optional): Filter by specific event type
+
+**Response**:
+```json
+{
+  "entity_id": "entity-uuid",
+  "logs": [
+    {
+      "id": "log-uuid",
+      "event_type": "entity_viewed",
+      "entity_id": "entity-uuid",
+      "user_id": "viewer-id",
+      "tenant_context": "default",
+      "event_payload": {
+        "source": "direct",
+        "referrer": "search"
+      },
+      "timestamp": "2025-07-09T12:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 1,
+    "has_more": false
+  },
+  "owner": "owner-id",
+  "tenant": "default"
+}
+```
+
+---
+
+### Log Interaction
+Manually log an interaction event.
+
+```http
+POST /api/interaction_logs
+Authorization: Bearer <your-token>  // optional
+Content-Type: application/json
+
+{
+  "eventType": "custom_event",
+  "entityId": "entity-uuid",
+  "eventPayload": {
+    "custom_data": "value",
+    "source": "manual"
+  }
+}
+```
+
+**Request Fields**:
+- `eventType` (required): Type of event to log
+- `entityId` (optional): Related entity ID
+- `eventPayload` (optional): Additional event data
+
+**Common Event Types**:
+- `visit_main` - User loads main entity listing
+- `visit_entity` - Direct entity view
+- `entity_viewed` - Entity accessed
+- `entity_created` - Entity created
+- `entity_updated` - Entity modified
+- `entity_deleted` - Entity deleted
+- `entities_searched` - Search performed
+- `custom_event` - Custom tracking event
+
+**Response**:
+```json
+{
+  "success": true,
+  "message": "Interaction logged successfully",
+  "logged_at": "2025-07-09T12:00:00.000Z"
+}
+```
+
+---
+
+**📅 Last Updated**: July 9, 2025  
 **🔄 API Version**: 1.0.0  
 **✅ All endpoints tested and verified**

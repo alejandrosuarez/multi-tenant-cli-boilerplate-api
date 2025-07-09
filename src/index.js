@@ -730,6 +730,153 @@ fastify.get('/api/auth/me', {
   };
 });
 
+// ================================
+// LOGS API ENDPOINTS
+// ================================
+
+// Get user's interaction logs
+fastify.get('/api/my/interactions', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  try {
+    const tenantId = auth.getTenantContext(request);
+    const { page = 1, limit = 50, event_type } = request.query;
+    const offset = (page - 1) * limit;
+    
+    let query = db.table('interactionLogs')
+      .select('*')
+      .eq('user_id', request.user.id)
+      .eq('tenant_context', tenantId)
+      .order('timestamp', { ascending: false })
+      .range(offset, offset + limit - 1);
+    
+    // Filter by event type if provided
+    if (event_type) {
+      query = query.eq('event_type', event_type);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      reply.status(500);
+      return { error: error.message };
+    }
+    
+    return {
+      interactions: data,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: data.length,
+        has_more: data.length === limit
+      },
+      user_id: request.user.id,
+      tenant: tenantId
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// Get logs for a specific entity
+fastify.get('/api/entities/:id/logs', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  try {
+    const entityId = request.params.id;
+    const tenantId = auth.getTenantContext(request);
+    const { page = 1, limit = 50, event_type } = request.query;
+    const offset = (page - 1) * limit;
+    
+    // Check if entity exists and user has access
+    const entityResult = await entityService.getEntity(entityId, request.user.id, tenantId);
+    if (!entityResult.success) {
+      reply.status(404);
+      return { error: 'Entity not found or access denied' };
+    }
+    
+    // Only allow entity owners to see logs
+    if (entityResult.data.owner_id !== request.user.id) {
+      reply.status(403);
+      return { error: 'Only entity owners can view logs' };
+    }
+    
+    let query = db.table('interactionLogs')
+      .select('*')
+      .eq('entity_id', entityId)
+      .eq('tenant_context', tenantId)
+      .order('timestamp', { ascending: false })
+      .range(offset, offset + limit - 1);
+    
+    // Filter by event type if provided
+    if (event_type) {
+      query = query.eq('event_type', event_type);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      reply.status(500);
+      return { error: error.message };
+    }
+    
+    return {
+      entity_id: entityId,
+      logs: data,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total: data.length,
+        has_more: data.length === limit
+      },
+      owner: request.user.id,
+      tenant: tenantId
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// Manual log interaction endpoint
+fastify.post('/api/interaction_logs', {
+  preHandler: auth.optional.bind(auth)
+}, async (request, reply) => {
+  try {
+    const { eventType, entityId, eventPayload = {} } = request.body;
+    const tenantId = auth.getTenantContext(request);
+    
+    if (!eventType) {
+      reply.status(400);
+      return { error: 'eventType is required' };
+    }
+    
+    // Log the interaction
+    const result = await db.logInteraction(
+      eventType,
+      request.user?.id || 'anonymous',
+      tenantId,
+      eventPayload,
+      entityId
+    );
+    
+    if (!result.success) {
+      reply.status(500);
+      return { error: result.error };
+    }
+    
+    return {
+      success: true,
+      message: 'Interaction logged successfully',
+      logged_at: new Date().toISOString()
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
 // Debug endpoint for OTP stats
 fastify.get('/api/debug/otp-stats', async (request, reply) => {
   if (process.env.NODE_ENV === 'production') {
