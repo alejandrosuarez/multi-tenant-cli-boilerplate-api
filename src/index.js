@@ -56,6 +56,10 @@ const otpService = new OTPService();
 const ImageService = require('./services/image');
 const imageService = new ImageService(db);
 
+// Initialize Notification service
+const NotificationService = require('./services/notification');
+const notificationService = new NotificationService(db);
+
 // Cleanup expired OTPs every 5 minutes
 setInterval(() => {
   otpService.cleanupExpired();
@@ -93,6 +97,14 @@ fastify.get('/health', async (request, reply) => {
     status.services.images = imageHealth.status;
   } catch (err) {
     status.services.images = 'error';
+  }
+  
+  // Check notification service
+  try {
+    const notificationHealth = await notificationService.healthCheck();
+    status.services.notifications = notificationHealth.status;
+  } catch (err) {
+    status.services.notifications = 'error';
   }
 
   return status;
@@ -940,6 +952,334 @@ fastify.post('/api/test/send-email', async (request, reply) => {
   }
 });
 
+// ================================
+// NOTIFICATION ENDPOINTS
+// ================================
+
+// Subscribe device for push notifications
+fastify.post('/api/notifications/subscribe-device', {
+  preHandler: auth.optional.bind(auth)
+}, async (request, reply) => {
+  try {
+    const { deviceToken, tenantContext } = request.body;
+    const userId = request.user?.id || null;
+    const tenant = tenantContext || auth.getTenantContext(request);
+    
+    if (!deviceToken) {
+      reply.status(400);
+      return { error: 'Device token is required' };
+    }
+    
+    const subscriptionData = {
+      platform: 'web',
+      user_agent: request.headers['user-agent'],
+      subscribed_at: new Date().toISOString()
+    };
+    
+    const result = await notificationService.subscribeDevice(
+      deviceToken,
+      userId,
+      tenant,
+      subscriptionData
+    );
+    
+    if (!result.success) {
+      reply.status(400);
+      return { error: result.error };
+    }
+    
+    return {
+      success: true,
+      message: 'Device subscribed successfully',
+      data: result.data,
+      action: result.action
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// Merge device subscription when user logs in
+fastify.post('/api/notifications/merge-device', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  try {
+    const { deviceToken } = request.body;
+    const userId = request.user.id;
+    const tenantContext = auth.getTenantContext(request);
+    
+    if (!deviceToken) {
+      reply.status(400);
+      return { error: 'Device token is required' };
+    }
+    
+    const result = await notificationService.mergeDeviceSubscription(
+      deviceToken,
+      userId,
+      tenantContext
+    );
+    
+    if (!result.success) {
+      reply.status(400);
+      return { error: result.error };
+    }
+    
+    return {
+      success: true,
+      message: 'Device subscription merged successfully',
+      merged: result.merged
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// Send notification (universal endpoint)
+fastify.post('/api/notifications/send', {
+  preHandler: auth.optional.bind(auth)
+}, async (request, reply) => {
+  try {
+    const { 
+      userId, 
+      eventType, 
+      message, 
+      link, 
+      tenantContext, 
+      eventPayload = {} 
+    } = request.body;
+    
+    const tenant = tenantContext || auth.getTenantContext(request);
+    
+    // Validate required fields
+    if (!userId || !eventType || !message) {
+      reply.status(400);
+      return { error: 'userId, eventType, and message are required' };
+    }
+    
+    const result = await notificationService.sendNotification(
+      userId,
+      eventType,
+      message,
+      link,
+      tenant,
+      eventPayload
+    );
+    
+    if (!result.success) {
+      reply.status(400);
+      return { error: result.error };
+    }
+    
+    return {
+      success: true,
+      message: 'Notification sent successfully',
+      data: result.data,
+      pushSent: result.pushSent
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// Send chat request notification
+fastify.post('/api/notifications/chat-request', {
+  preHandler: auth.optional.bind(auth)
+}, async (request, reply) => {
+  try {
+    const { entityId, chatUrl } = request.body;
+    const requesterId = request.user?.id || 'anonymous';
+    const tenantContext = auth.getTenantContext(request);
+    
+    if (!entityId || !chatUrl) {
+      reply.status(400);
+      return { error: 'entityId and chatUrl are required' };
+    }
+    
+    const result = await notificationService.sendChatRequestNotification(
+      entityId,
+      requesterId,
+      tenantContext,
+      chatUrl
+    );
+    
+    if (!result.success) {
+      reply.status(400);
+      return { error: result.error };
+    }
+    
+    return {
+      success: true,
+      message: 'Chat request notification sent to owner',
+      data: result.data,
+      pushSent: result.pushSent
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// Get user notification preferences
+fastify.get('/api/notifications/preferences', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  try {
+    const userId = request.user.id;
+    const tenantContext = auth.getTenantContext(request);
+    
+    const result = await notificationService.getUserPreferences(userId, tenantContext);
+    
+    if (!result.success) {
+      reply.status(400);
+      return { error: result.error };
+    }
+    
+    return {
+      success: true,
+      preferences: result.data.preferences || result.data,
+      userId: userId
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// Update user notification preferences
+fastify.post('/api/notifications/preferences', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  try {
+    const { preferences } = request.body;
+    const userId = request.user.id;
+    const tenantContext = auth.getTenantContext(request);
+    
+    if (!preferences || typeof preferences !== 'object') {
+      reply.status(400);
+      return { error: 'Valid preferences object is required' };
+    }
+    
+    const result = await notificationService.updateUserPreferences(
+      userId,
+      tenantContext,
+      preferences
+    );
+    
+    if (!result.success) {
+      reply.status(400);
+      return { error: result.error };
+    }
+    
+    return {
+      success: true,
+      message: 'Preferences updated successfully',
+      data: result.data
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// Get notification history
+fastify.get('/api/notifications/history', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  try {
+    const userId = request.user.id;
+    const tenantContext = auth.getTenantContext(request);
+    const { page = 1, limit = 20 } = request.query;
+    
+    const result = await notificationService.getNotificationHistory(
+      userId,
+      tenantContext,
+      parseInt(page),
+      parseInt(limit)
+    );
+    
+    if (!result.success) {
+      reply.status(400);
+      return { error: result.error };
+    }
+    
+    return {
+      success: true,
+      notifications: result.data,
+      pagination: result.pagination,
+      userId: userId
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// Mark notification as seen
+fastify.post('/api/notifications/:id/seen', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  try {
+    const notificationId = request.params.id;
+    const userId = request.user.id;
+    
+    const result = await notificationService.markNotificationSeen(
+      notificationId,
+      userId
+    );
+    
+    if (!result.success) {
+      reply.status(400);
+      return { error: result.error };
+    }
+    
+    return {
+      success: true,
+      message: 'Notification marked as seen',
+      data: result.data
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// Test notification endpoint
+fastify.post('/api/notifications/test', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  try {
+    const userId = request.user.id;
+    const tenantContext = auth.getTenantContext(request);
+    
+    const result = await notificationService.sendTestNotification(
+      userId,
+      tenantContext
+    );
+    
+    if (!result.success) {
+      reply.status(400);
+      return { error: result.error };
+    }
+    
+    return {
+      success: true,
+      message: 'Test notification sent successfully',
+      data: result.data,
+      pushSent: result.pushSent
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// ================================
+// LEGACY ENDPOINTS
+// ================================
+
 // Request attribute info endpoint
 fastify.post('/api/request-attribute', {
   preHandler: auth.required.bind(auth)
@@ -1085,6 +1425,7 @@ fastify.get('/', async (request, reply) => {
       setup: '/api/setup',
       entities: '/api/entities',
       auth: '/api/auth/*',
+      notifications: '/api/notifications/*',
       docs: 'https://github.com/your-repo/docs'
     }
   };

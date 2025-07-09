@@ -538,6 +538,308 @@ GET /api/categories/:category/entities?include_images=true&page=1&limit=20
 
 ---
 
+## 🔔 Notifications
+
+### Subscribe Device
+
+**POST** `/api/notifications/subscribe-device`
+
+Subscribe a device for push notifications (supports both anonymous and authenticated users).
+
+**Headers:**
+- `Authorization: Bearer <token>` (optional)
+
+**Body:**
+```json
+{
+  "deviceToken": "onesignal_player_id_123",
+  "tenantContext": "tenant_main"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Device subscribed successfully",
+  "data": {
+    "id": "uuid",
+    "device_token": "onesignal_player_id_123",
+    "user_id": "user_123",
+    "tenant_context": "tenant_main",
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00Z"
+  },
+  "action": "created"
+}
+```
+
+---
+
+### Merge Device Subscription
+
+**POST** `/api/notifications/merge-device`
+
+Merge anonymous device subscription when user logs in.
+
+**Headers:**
+- `Authorization: Bearer <token>` (required)
+
+**Body:**
+```json
+{
+  "deviceToken": "onesignal_player_id_123"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Device subscription merged successfully",
+  "merged": true
+}
+```
+
+---
+
+### Send Notification
+
+**POST** `/api/notifications/send`
+
+Send any type of notification to a user.
+
+**Headers:**
+- `Authorization: Bearer <token>` (optional)
+
+**Body:**
+```json
+{
+  "userId": "user_123",
+  "eventType": "chat_request",
+  "message": "Someone wants to chat about your listing.",
+  "link": "https://platform.com/entity/123/chat",
+  "tenantContext": "tenant_main",
+  "eventPayload": {
+    "entity_id": "entity_123",
+    "requester_id": "user_456"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Notification sent successfully",
+  "data": {
+    "id": "notification_uuid",
+    "user_id": "user_123",
+    "event_type": "chat_request",
+    "message": "Someone wants to chat about your listing.",
+    "link": "https://platform.com/entity/123/chat",
+    "timestamp": "2024-01-01T00:00:00Z"
+  },
+  "pushSent": true
+}
+```
+
+---
+
+### Chat Request Notification
+
+**POST** `/api/notifications/chat-request`
+
+Specialized endpoint for chat requests to entity owners.
+
+**Headers:**
+- `Authorization: Bearer <token>` (optional)
+
+**Body:**
+```json
+{
+  "entityId": "entity_123",
+  "chatUrl": "https://platform.com/entity/123/chat"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Chat request notification sent to owner",
+  "data": {
+    "id": "notification_uuid",
+    "user_id": "owner_123",
+    "event_type": "chat_request",
+    "message": "Someone wants to chat about your vehicle listing.",
+    "link": "https://platform.com/entity/123/chat"
+  },
+  "pushSent": true
+}
+```
+
+---
+
+### Get Notification Preferences
+
+**GET** `/api/notifications/preferences`
+
+Get user's notification preferences.
+
+**Headers:**
+- `Authorization: Bearer <token>` (required)
+
+**Response:**
+```json
+{
+  "success": true,
+  "preferences": {
+    "chat_requests": true,
+    "attribute_updates": true,
+    "reminders": true,
+    "marketing": false
+  },
+  "userId": "user_123"
+}
+```
+
+---
+
+### Update Notification Preferences
+
+**POST** `/api/notifications/preferences`
+
+Update user's notification preferences.
+
+**Headers:**
+- `Authorization: Bearer <token>` (required)
+
+**Body:**
+```json
+{
+  "preferences": {
+    "chat_requests": true,
+    "attribute_updates": false,
+    "reminders": true,
+    "marketing": false
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Preferences updated successfully",
+  "data": {
+    "id": "pref_uuid",
+    "user_id": "user_123",
+    "preferences": {
+      "chat_requests": true,
+      "attribute_updates": false,
+      "reminders": true,
+      "marketing": false
+    }
+  }
+}
+```
+
+---
+
+### Get Notification History
+
+**GET** `/api/notifications/history?page=1&limit=20`
+
+Get user's notification history with pagination.
+
+**Headers:**
+- `Authorization: Bearer <token>` (required)
+
+**Query Parameters:**
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 20)
+
+**Response:**
+```json
+{
+  "success": true,
+  "notifications": [
+    {
+      "id": "notification_uuid",
+      "event_type": "chat_request",
+      "message": "Someone wants to chat about your listing.",
+      "link": "https://platform.com/entity/123/chat",
+      "event_payload": {
+        "entity_id": "entity_123",
+        "requester_id": "user_456"
+      },
+      "seen": false,
+      "timestamp": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 1,
+    "has_more": false
+  },
+  "userId": "user_123"
+}
+```
+
+---
+
+### Mark Notification as Seen
+
+**POST** `/api/notifications/:id/seen`
+
+Mark a specific notification as seen.
+
+**Headers:**
+- `Authorization: Bearer <token>` (required)
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Notification marked as seen",
+  "data": {
+    "id": "notification_uuid",
+    "seen": true,
+    "updated_at": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+### Test Notification
+
+**POST** `/api/notifications/test`
+
+Send a test notification to the authenticated user.
+
+**Headers:**
+- `Authorization: Bearer <token>` (required)
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Test notification sent successfully",
+  "data": {
+    "id": "notification_uuid",
+    "event_type": "test",
+    "message": "This is a test notification from your notification system.",
+    "timestamp": "2024-01-01T00:00:00Z"
+  },
+  "pushSent": true
+}
+```
+
+---
+
 ## 🏥 System Health
 
 ### Health Check
@@ -557,7 +859,8 @@ GET /health
   "services": {
     "database": "healthy",
     "auth": "configured",
-    "notifications": "configured"
+    "notifications": "healthy",
+    "images": "healthy"
   }
 }
 ```
@@ -699,6 +1002,7 @@ Or for validation errors:
 3. **Verify OTP**: `POST /api/auth/verify-otp` (get token)
 4. **Use Token**: Include `Authorization: Bearer <token>` in requests
 5. **Access APIs**: All authenticated endpoints now available
+6. **Notifications**: Subscribe devices and send push notifications
 
 **Example cURL Commands**:
 
@@ -715,6 +1019,16 @@ curl -X POST http://localhost:3000/api/auth/verify-otp \
 
 # Use token for authenticated request
 curl -X GET http://localhost:3000/api/auth/me \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+
+# Subscribe device for notifications
+curl -X POST http://localhost:3000/api/notifications/subscribe-device \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d '{"deviceToken": "onesignal_player_id", "tenantContext": "default"}'
+
+# Send test notification
+curl -X POST http://localhost:3000/api/notifications/test \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
