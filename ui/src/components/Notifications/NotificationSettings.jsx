@@ -5,11 +5,12 @@ const NotificationSettings = ({ user }) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [playerId, setPlayerId] = useState(null);
   const [permissionState, setPermissionState] = useState('default');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // No loading since we're using native bell
 
-  useEffect(() => {
-    checkNotificationStatus();
-  }, []);
+  // DISABLED: Let OneSignal native bell handle subscription
+  // useEffect(() => {
+  //   checkNotificationStatus();
+  // }, []);
 
   const checkNotificationStatus = async () => {
     try {
@@ -85,63 +86,36 @@ const NotificationSettings = ({ user }) => {
     <div className="notification-settings">
       <h4>Push Notifications</h4>
       
-      <div className="notification-status">
-        <div className="status-item">
-          <strong>Permission:</strong> 
-          <span className={`badge ${permissionState === 'granted' ? 'bg-success' : 'bg-warning'}`}>
-            {permissionState}
-          </span>
+      <div className="notification-native-info">
+        <div className="alert alert-info">
+          <i className="fas fa-bell"></i>
+          <strong>Native OneSignal Bell Active</strong>
+          <p>Push notifications are now handled by OneSignal's native bell widget. Look for the notification bell icon on your screen to subscribe and manage your notification preferences.</p>
         </div>
-        
-        <div className="status-item">
-          <strong>Subscribed:</strong> 
-          <span className={`badge ${isSubscribed ? 'bg-success' : 'bg-secondary'}`}>
-            {isSubscribed ? 'Yes' : 'No'}
-          </span>
-        </div>
-        
-        {playerId && (
-          <div className="status-item">
-            <strong>Player ID:</strong> 
-            <code className="text-muted">{playerId}</code>
-          </div>
-        )}
       </div>
 
       <div className="notification-actions mt-3">
-        {!isSubscribed && (
-          <button 
-            className="btn btn-primary me-2" 
-            onClick={handleEnableNotifications}
-            disabled={loading}
-          >
-            <i className="fas fa-bell"></i> Enable Notifications
-          </button>
-        )}
-        
-        {isSubscribed && (
-          <button 
-            className="btn btn-success me-2" 
-            onClick={sendTestNotification}
-            disabled={loading}
-          >
-            <i className="fas fa-paper-plane"></i> Send Test Notification
-          </button>
-        )}
+        <button 
+          className="btn btn-success me-2" 
+          onClick={sendTestNotification}
+          disabled={loading}
+        >
+          <i className="fas fa-paper-plane"></i> Send Test Notification
+        </button>
         
         <button 
           className="btn btn-secondary" 
-          onClick={checkNotificationStatus}
+          onClick={() => window.location.reload()}
           disabled={loading}
         >
-          <i className="fas fa-sync"></i> Refresh Status
+          <i className="fas fa-sync"></i> Refresh Page
         </button>
       </div>
 
       <div className="notification-help mt-3">
         <small className="text-muted">
           <i className="fas fa-info-circle"></i> 
-          Push notifications help you stay updated with important updates and reminders.
+          OneSignal's native bell provides a better user experience for managing push notification subscriptions.
         </small>
       </div>
 

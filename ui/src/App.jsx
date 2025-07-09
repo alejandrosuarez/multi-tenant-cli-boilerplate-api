@@ -22,11 +22,12 @@ function App() {
   
   const initializeOneSignal = async () => {
     try {
-      await oneSignalService.initialize();
-      console.log('OneSignal service initialized');
+      // DISABLED: Let OneSignal handle native bell notification system
+      console.log('🔔 OneSignal custom initialization disabled');
+      console.log('💡 OneSignal will use native bell widget instead');
+      // await oneSignalService.initialize();
     } catch (error) {
       console.error('Failed to initialize OneSignal:', error);
-      // Don't let OneSignal errors break the app
     }
   };
 
@@ -49,9 +50,13 @@ function App() {
   const handleAuth = async (userData, token) => {
     setUser(userData);
     
-    // Set up OneSignal user context after login
+    // DISABLED: OneSignal user context setup
+    // Let OneSignal native bell handle user management
+    console.log('👤 User authenticated:', userData.email);
+    console.log('🔔 OneSignal native bell will handle user subscription');
+    
+    /* ORIGINAL CODE COMMENTED OUT
     try {
-      // Set external user ID first (most important for linking)
       const externalUserId = userData.id || userData.email;
       await oneSignalService.setExternalUserId(externalUserId);
       
@@ -59,7 +64,6 @@ function App() {
         await oneSignalService.setUserEmail(userData.email);
       }
       
-      // Set user tags for better targeting
       await oneSignalService.setUserTags({
         userId: externalUserId,
         tenantId: userData.tenantId || 'default'
@@ -69,6 +73,7 @@ function App() {
     } catch (error) {
       console.error('Error setting up OneSignal user context:', error);
     }
+    */
   };
 
   const handleLogout = () => {

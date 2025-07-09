@@ -9,16 +9,24 @@ class OneSignalService {
   async initialize() {
     if (this.isInitialized) return;
 
-    // Skip OneSignal initialization in development if not properly configured
+    // DISABLED: Let OneSignal handle native bell notification system
+    // OneSignal provides a better built-in bell UI that handles subscription flow
+    console.log('🔔 OneSignal custom implementation disabled');
+    console.log('💡 OneSignal native bell will handle subscriptions automatically');
+    console.log('🎯 Users can subscribe via OneSignal bell widget');
+    
+    this.isInitialized = true;
+    return;
+    
+    // ORIGINAL CODE COMMENTED OUT FOR FUTURE REFERENCE
+    /*
     const isProduction = import.meta.env.PROD;
     const currentOrigin = window.location.origin;
     const oneSignalAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
     
-    // Check if we're in development and OneSignal is not configured for localhost
     if (!isProduction && currentOrigin.includes('localhost')) {
       console.log('🔔 OneSignal disabled for localhost development environment');
-      console.log('💡 To enable OneSignal in development, configure it for localhost in OneSignal dashboard');
-      this.isInitialized = true; // Mark as initialized to prevent repeated attempts
+      this.isInitialized = true;
       return;
     }
 
@@ -29,15 +37,10 @@ class OneSignalService {
     }
 
     try {
-      console.log('🔔 Initializing OneSignal for:', currentOrigin);
-      
-      // Initialize OneSignal
       await OneSignal.init({
         appId: oneSignalAppId,
         safari_web_id: import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID,
-        notifyButton: {
-          enable: true,
-        },
+        notifyButton: { enable: true },
         allowLocalhostAsSecureOrigin: true,
         serviceWorkerPath: '/OneSignalSDKWorker.js',
         serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
@@ -46,25 +49,19 @@ class OneSignalService {
         autoResubscribe: true,
       });
 
-      // Set up event listeners
       OneSignal.on('subscriptionChange', (isSubscribed) => {
-        console.log('OneSignal subscription changed:', isSubscribed);
         if (isSubscribed) {
           this.handleSubscriptionChange();
         }
-      });
-
-      OneSignal.on('notificationPermissionChange', (permission) => {
-        console.log('OneSignal notification permission changed:', permission);
       });
 
       this.isInitialized = true;
       console.log('✅ OneSignal initialized successfully');
     } catch (error) {
       console.error('❌ OneSignal initialization failed:', error);
-      // Don't throw the error - just log it and continue
-      this.isInitialized = true; // Mark as initialized to prevent repeated attempts
+      this.isInitialized = true;
     }
+    */
   }
 
   async handleSubscriptionChange() {
