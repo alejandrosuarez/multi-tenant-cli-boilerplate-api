@@ -3,6 +3,7 @@ import { entitiesAPI, categoriesAPI, authAPI } from '../../services/api';
 import EntityList from './EntityList';
 import EntityModal from './EntityModal';
 import LogsViewer from './LogsViewer';
+import NotificationSettings from '../Notifications/NotificationSettings';
 import { useRealtime } from '../../hooks/useRealtime';
 import { logsAPI } from '../../services/api';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Badge, Dropdown, ButtonGroup } from 'react-bootstrap';
@@ -387,6 +388,13 @@ const Dashboard = ({ user, onLogout }) => {
           mode={modalMode}
           onSubmit={modalMode === 'edit' ? handleUpdateEntity : handleCreateEntity}
         />
+        </Row>
+        
+        {/* Notification Settings Section */}
+        <Row>
+          <Col lg={12}>
+            <NotificationSettings user={user} />
+          </Col>
         </Row>
         
         {/* Enhanced Logs Viewer Modal */}

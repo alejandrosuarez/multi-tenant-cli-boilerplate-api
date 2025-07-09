@@ -6,6 +6,7 @@ import ListingPage from './components/Listing/ListingPage';
 import EntityDetailsPage from './pages/EntityDetailsPage';
 import PublicLayout from './components/Layout/PublicLayout';
 import { authAPI } from './services/api';
+import oneSignalService from './services/onesignal';
 import './styles/globals.css';
 import '@fortawesome/fontawesome-free/css/all.css';
 
@@ -15,6 +16,8 @@ function App() {
 
   useEffect(() => {
     checkAuth();
+    // Initialize OneSignal for push notifications
+    oneSignalService.initialize();
   }, []);
 
   const checkAuth = async () => {
@@ -33,8 +36,23 @@ function App() {
     setLoading(false);
   };
 
-  const handleAuth = (userData, token) => {
+  const handleAuth = async (userData, token) => {
     setUser(userData);
+    
+    // Set up OneSignal user context after login
+    try {
+      if (userData.email) {
+        await oneSignalService.setUserEmail(userData.email);
+      }
+      
+      // Set user tags for better targeting
+      await oneSignalService.setUserTags({
+        userId: userData.id || userData.email,
+        tenantId: userData.tenantId || 'default'
+      });
+    } catch (error) {
+      console.error('Error setting up OneSignal user context:', error);
+    }
   };
 
   const handleLogout = () => {
