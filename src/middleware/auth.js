@@ -204,6 +204,32 @@ class AuthMiddleware {
     const userTenant = this.getTenantContext(request);
     return userTenant === resourceTenantId || userTenant === 'global';
   }
+
+  // Middleware to check Bearer token and allowed domains
+  async bearerTokenAndDomainCheck(request, reply) {
+    const token = this.extractToken(request);
+    const allowedDomains = process.env.ALLOWED_DOMAINS ? process.env.ALLOWED_DOMAINS.split(',') : [];
+    const origin = request.headers.origin;
+
+    if (allowedDomains.length && !allowedDomains.includes(origin)) {
+      reply.status(403);
+      throw new Error('Request from origin not allowed');
+    }
+
+    if (!token || !process.env.API_TOKENS?.split(',').includes(token)) {
+      reply.status(401);
+      throw new Error('Invalid or missing authorization token');
+    }
+
+    // For API tokens, we don't need to verify JWT - just check the token is valid
+    // Set a minimal user context for API access
+    request.user = {
+      id: 'api-user',
+      email: 'api@system.local',
+      tenant: 'default',
+      metadata: { source: 'api_token' }
+    };
+  }
 }
 
 module.exports = AuthMiddleware;

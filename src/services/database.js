@@ -93,7 +93,15 @@ class DatabaseService {
       throw new Error('Supabase not configured');
     }
     
-    const prefixedName = this.tables[tableName] || `${this.prefix}${tableName}`;
+    // Check if table name already has prefix to avoid double-prefixing
+    let prefixedName;
+    if (this.tables[tableName]) {
+      prefixedName = this.tables[tableName];
+    } else if (tableName.startsWith(this.prefix)) {
+      prefixedName = tableName; // Already has prefix
+    } else {
+      prefixedName = `${this.prefix}${tableName}`; // Add prefix
+    }
     return client.from(prefixedName);
   }
 
