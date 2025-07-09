@@ -22,7 +22,7 @@ class NotificationService {
   async subscribeDevice(deviceToken, userId, tenantContext, subscriptionData = {}) {
     try {
       // Check if subscription already exists
-      const existingSubscription = await this.db.table('pushSubscriptions')
+      const existingSubscription = await this.db.table('mtcli_push_subscriptions')
         .select('*')
         .eq('device_token', deviceToken)
         .eq('tenant_context', tenantContext)
@@ -30,7 +30,7 @@ class NotificationService {
 
       if (existingSubscription.data) {
         // Update existing subscription
-        const { data, error } = await this.db.table('pushSubscriptions')
+        const { data, error } = await this.db.table('mtcli_push_subscriptions')
           .update({
             user_id: userId,
             subscription_data: subscriptionData,
@@ -49,7 +49,7 @@ class NotificationService {
         return { success: true, data, action: 'updated' };
       } else {
         // Create new subscription
-        const { data, error } = await this.db.table('pushSubscriptions')
+        const { data, error } = await this.db.table('mtcli_push_subscriptions')
           .insert({
             device_token: deviceToken,
             user_id: userId,
@@ -124,7 +124,7 @@ class NotificationService {
    */
   async unsubscribeDevice(deviceToken, tenantContext) {
     try {
-      const { data, error } = await this.db.table('pushSubscriptions')
+      const { data, error } = await this.db.table('mtcli_push_subscriptions')
         .update({ is_active: false })
         .eq('device_token', deviceToken)
         .eq('tenant_context', tenantContext)
@@ -157,7 +157,7 @@ class NotificationService {
   async sendNotification(userId, eventType, message, link, tenantContext, eventPayload = {}) {
     try {
       // 1. Store notification in database
-      const { data: notificationData, error: dbError } = await this.db.table('notifications')
+      const { data: notificationData, error: dbError } = await this.db.table('mtcli_notifications')
         .insert({
           user_id: userId,
           event_type: eventType,
@@ -209,7 +209,7 @@ class NotificationService {
   async sendAnonymousNotification(deviceToken, message, link, eventPayload = {}) {
     try {
       // Store notification in database with device_token
-      const { data: notificationData, error: dbError } = await this.db.table('notifications')
+      const { data: notificationData, error: dbError } = await this.db.table('mtcli_notifications')
         .insert({
           device_token: deviceToken,
           event_type: 'anonymous_notification',
@@ -318,7 +318,7 @@ class NotificationService {
    */
   async getUserPreferences(userId, tenantContext) {
     try {
-      const { data, error } = await this.db.table('notificationPreferences')
+      const { data, error } = await this.db.table('mtcli_notification_preferences')
         .select('*')
         .eq('user_id', userId)
         .eq('tenant_context', tenantContext)
@@ -353,7 +353,7 @@ class NotificationService {
    */
   async updateUserPreferences(userId, tenantContext, preferences) {
     try {
-      const { data, error } = await this.db.table('notificationPreferences')
+      const { data, error } = await this.db.table('mtcli_notification_preferences')
         .upsert({
           user_id: userId,
           tenant_context: tenantContext,
@@ -387,7 +387,7 @@ class NotificationService {
     try {
       const offset = (page - 1) * limit;
 
-      const { data, error } = await this.db.table('notifications')
+      const { data, error } = await this.db.table('mtcli_notifications')
         .select('*')
         .eq('user_id', userId)
         .eq('tenant_context', tenantContext)
@@ -420,7 +420,7 @@ class NotificationService {
    */
   async markNotificationSeen(notificationId, userId) {
     try {
-      const { data, error } = await this.db.table('notifications')
+      const { data, error } = await this.db.table('mtcli_notifications')
         .update({ seen: true })
         .eq('id', notificationId)
         .eq('user_id', userId)
@@ -451,7 +451,7 @@ class NotificationService {
   async sendChatRequestNotification(entityId, requesterId, tenantContext, chatUrl) {
     try {
       // Get entity details to find owner
-      const { data: entity, error: entityError } = await this.db.table('entities')
+      const { data: entity, error: entityError } = await this.db.table('mtcli_entities')
         .select('id, owner_id, attributes, entity_type')
         .eq('id', entityId)
         .single();
@@ -528,7 +528,7 @@ class NotificationService {
 
       // Check database connection
       try {
-        const { data, error } = await this.db.table('notifications')
+        const { data, error } = await this.db.table('mtcli_notifications')
           .select('count')
           .limit(1);
         checks.database = !error;
