@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { mediaAPI } from '../../services/api';
 import { Card, Button, Row, Col, Badge, Spinner, Image } from 'react-bootstrap';
+import RequestAttributeButton from '../RequestAttributeButton';
 
-const EntityList = ({ entities, onEdit, onView, onDelete, tenantId, onShowLogs }) => {
+const EntityList = ({ entities, onEdit, onView, onDelete, tenantId, onShowLogs, currentUser }) => {
   const [entityImages, setEntityImages] = useState({});
   const [loadingImages, setLoadingImages] = useState({});
 
@@ -107,16 +108,36 @@ const EntityList = ({ entities, onEdit, onView, onDelete, tenantId, onShowLogs }
                     {Object.entries(entity.attributes)
                       .filter(([key]) => key !== 'name' && key !== 'description')
                       .slice(0, 4) // Limit to first 4 attributes to prevent overflow
-                      .map(([key, value]) => (
-                        <div key={key} className="attribute-item">
-                          <span className="attribute-key">
-                            {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
-                          </span>
-                          <span className="attribute-value" title={String(value)}>
-                            {String(value) || 'N/A'}
-                          </span>
-                        </div>
-                      ))}
+                      .map(([key, value]) => {
+                        const isEmpty = !value || value === '';
+                        return (
+                          <div key={key} className="attribute-item">
+                            <span className="attribute-key">
+                              {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                            </span>
+                            <div className="attribute-value-section">
+                              <span className="attribute-value" title={String(value)}>
+                                {isEmpty ? (
+                                  <span className="text-muted font-italic">No info</span>
+                                ) : (
+                                  String(value)
+                                )}
+                              </span>
+                              {isEmpty && (
+                                <div className="mt-1">
+                                  <RequestAttributeButton
+                                    attributeName={key}
+                                    entityId={entity.id}
+                                    currentUser={currentUser}
+                                    entityOwner={entity.user_id}
+                                    tenantId={tenantId || entity.tenant_id}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     {Object.keys(entity.attributes).filter(key => key !== 'name' && key !== 'description').length > 4 && (
                       <div className="attribute-item more-attributes">
                         <span className="attribute-key text-muted">

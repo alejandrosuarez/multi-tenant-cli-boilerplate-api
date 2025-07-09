@@ -940,6 +940,139 @@ fastify.post('/api/test/send-email', async (request, reply) => {
   }
 });
 
+// Request attribute info endpoint
+fastify.post('/api/request-attribute', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  const { attribute, entityId } = request.body;
+  const tenantId = auth.getTenantContext(request);
+  
+  // Input validation
+  if (!attribute || !entityId) {
+    reply.status(400);
+    return { error: 'Attribute and Entity ID are required' };
+  }
+
+  // Validate attribute name (prevent injection)
+  if (typeof attribute !== 'string' || !/^[a-zA-Z0-9_]+$/.test(attribute)) {
+    reply.status(400);
+    return { error: 'Invalid attribute name' };
+  }
+
+  // Validate entity ID format
+  if (typeof entityId !== 'string' || entityId.length < 1) {
+    reply.status(400);
+    return { error: 'Invalid entity ID' };
+  }
+
+  try {
+    // Get entity details to find owner information
+    const entityResult = await entityService.getEntity(
+      entityId,
+      request.user.id,
+      tenantId
+    );
+
+    if (!entityResult.success) {
+      reply.status(404);
+      return { error: 'Entity not found' };
+    }
+
+    const entity = entityResult.data;
+    
+    // Prevent self-requests
+    if (entity.user_id === request.user.id) {
+      reply.status(400);
+      return { error: 'Cannot request information on your own entities' };
+    }
+
+    // Check if attribute actually exists in the entity schema
+    const validAttributes = Object.keys(entity.attributes || {});
+    if (!validAttributes.includes(attribute)) {
+      reply.status(400);
+      return { error: 'Attribute does not exist for this entity' };
+    }
+
+    // Check if attribute is actually empty (no point in requesting if it has value)
+    const attributeValue = entity.attributes[attribute];
+    if (attributeValue && attributeValue !== '') {
+      reply.status(400);
+      return { error: 'Attribute already has a value' };
+    }
+
+    // Rate limiting check: prevent spam requests
+    const recentRequests = await db.query(
+      'SELECT COUNT(*) as count FROM mtcli_interactions WHERE user_id = ? AND event_type = ? AND created_at > ? AND event_payload->"$.entity_id" = ?',
+      [request.user.id, 'attribute_info_requested', new Date(Date.now() - 3600000), entityId] // 1 hour ago
+    );
+    
+    if (recentRequests.data && recentRequests.data[0]?.count >= 5) {
+      reply.status(429);
+      return { error: 'Too many requests. Please wait before requesting again.' };
+    }
+
+    // Get owner email - For now using a placeholder, should be fetched from user service
+    const ownerEmail = 'owner@example.com'; // TODO: Implement user lookup by user_id
+    
+    // Send notification email to entity owner
+    const { Resend } = require('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    
+    const attributeDisplayName = attribute.charAt(0).toUpperCase() + attribute.slice(1).replace(/([A-Z])/g, ' $1');
+    
+    const { data, error } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL,
+      to: [ownerEmail],
+      subject: `Information Request for ${entity.attributes.name || 'Your Entity'}`,
+      html: `
+        <h2>Attribute Information Request</h2>
+        <p>A user has requested more information about your entity.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+          <h3>Entity Details:</h3>
+          <p><strong>Name:</strong> ${entity.attributes.name || 'Unnamed Entity'}</p>
+          <p><strong>Type:</strong> ${entity.entity_type || 'N/A'}</p>
+          <p><strong>Requested Attribute:</strong> ${attributeDisplayName}</p>
+        </div>
+        
+        <p>The user is requesting additional information for the <strong>${attributeDisplayName}</strong> attribute, which currently appears to be empty or incomplete.</p>
+        
+        <p>Please consider updating your entity with the requested information to help users find what they're looking for.</p>
+        
+        <p style="color: #6c757d; font-size: 0.9em;">Sent at: ${new Date().toISOString()}</p>
+      `
+    });
+
+    if (error) {
+      reply.status(500);
+      return { error: 'Failed to send notification email' };
+    }
+
+    // Log the interaction
+    await db.logInteraction(
+      'attribute_info_requested',
+      request.user.id,
+      tenantId,
+      {
+        entity_id: entityId,
+        attribute: attribute,
+        owner_id: entity.user_id,
+        requested_at: new Date().toISOString()
+      },
+      entityId
+    );
+
+    return {
+      success: true,
+      message: 'Information request sent to entity owner',
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
 // Root endpoint
 fastify.get('/', async (request, reply) => {
   return {

@@ -173,6 +173,38 @@
   font-size: 0.9rem;
 }
 
+/* Attribute value containers */
+.attribute-value-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.attribute-value-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+/* Request attribute button styling */
+.request-attribute-btn {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.request-attribute-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.request-attribute-btn i {
+  font-size: 0.7rem;
+}
+
 /* Sidebar */
 .entity-sidebar {
   position: sticky;

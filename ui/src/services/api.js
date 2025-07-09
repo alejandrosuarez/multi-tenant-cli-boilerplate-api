@@ -120,4 +120,17 @@ export const logsAPI = {
   }
 };
 
+// API for requesting attribute information
+export const requestAttributeAPI = {
+  // Request more information about a specific attribute from entity owner
+  requestAttributeInfo: (attributeName, entityId, tenantId) => {
+    return api.post('/api/request-attribute', {
+      attribute: attributeName,
+      entityId: entityId
+    }, {
+      headers: tenantId ? { 'X-Tenant-ID': tenantId } : {}
+    });
+  }
+};
+
 export default api;

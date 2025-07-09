@@ -693,6 +693,30 @@ body {
   box-shadow: none;
 }
 
+.attribute-value-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+/* Request attribute button styling for EntityList */
+.attributes-grid .request-attribute-btn {
+  font-size: 0.6rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.attributes-grid .request-attribute-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.attributes-grid .request-attribute-btn i {
+  font-size: 0.55rem;
+}
+
 .entity-card-footer {
   display: flex;
   justify-content: space-between;

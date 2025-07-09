@@ -337,6 +337,7 @@ const Dashboard = ({ user, onLogout }) => {
                     onDelete={handleDeleteEntity}
                     onShowLogs={handleShowLogs}
                     tenantId={tenantId}
+                    currentUser={user}
                   />
                   
                   {/* Pagination */}

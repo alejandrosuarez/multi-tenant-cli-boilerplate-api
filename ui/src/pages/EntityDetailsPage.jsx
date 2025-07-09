@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Badge, Spinner, Alert, Image, Carousel } from 'react-bootstrap';
 import { entitiesAPI, mediaAPI, categoriesAPI } from '../services/api';
 import { DetailsSkeleton } from '../components/UI/Skeleton';
+import RequestAttributeButton from '../components/RequestAttributeButton';
 import './EntityDetailsPage.css';
 
 const EntityDetailsPage = () => {
@@ -11,12 +12,28 @@ const EntityDetailsPage = () => {
   const [entity, setEntity] = useState(null);
   const [images, setImages] = useState([]);
   const [category, setCategory] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadEntityData();
+    loadCurrentUser();
   }, [entityId, tenantId]);
+
+  const loadCurrentUser = () => {
+    // Get current user from localStorage or context
+    // This is a simplified version - in a real app you'd use proper auth context
+    const token = localStorage.getItem('authToken');
+    const userStr = localStorage.getItem('currentUser');
+    if (token && userStr) {
+      try {
+        setCurrentUser(JSON.parse(userStr));
+      } catch (err) {
+        console.warn('Failed to parse user data:', err);
+      }
+    }
+  };
 
   const loadEntityData = async () => {
     try {
@@ -152,8 +169,19 @@ const EntityDetailsPage = () => {
 
   // Filter out basic info from attributes to show separately
   const basicAttributes = ['name', 'description'];
-  const additionalAttributes = Object.entries(entity.attributes || {})
-    .filter(([key]) => !basicAttributes.includes(key) && entity.attributes[key] !== null && entity.attributes[key] !== '');
+  
+  // Get all possible attributes from category schema if available
+  const allPossibleAttributes = category?.base_schema ? Object.keys(category.base_schema) : [];
+  const entityAttributeKeys = Object.keys(entity.attributes || {});
+  const allAttributeKeys = [...new Set([...entityAttributeKeys, ...allPossibleAttributes])]
+    .filter(key => !basicAttributes.includes(key));
+  
+  // Create full attributes list with empty values for missing ones
+  const allAttributes = allAttributeKeys.map(key => {
+    const value = entity.attributes?.[key];
+    const isEmpty = value === null || value === undefined || value === '';
+    return [key, value, isEmpty];
+  });
 
   return (
     <div className="entity-details-page">
@@ -271,7 +299,7 @@ const EntityDetailsPage = () => {
           )}
 
           {/* Additional Attributes */}
-          {additionalAttributes.length > 0 && (
+          {allAttributes.length > 0 && (
             <Card className="entity-attributes-card">
               <Card.Header>
                 <h5 className="mb-0">
@@ -281,14 +309,31 @@ const EntityDetailsPage = () => {
               </Card.Header>
               <Card.Body>
                 <Row>
-                  {additionalAttributes.map(([key, value]) => (
+                  {allAttributes.map(([key, value, isEmpty]) => (
                     <Col md={6} key={key} className="mb-3">
                       <div className="attribute-item">
                         <label className="attribute-label">
                           {formatAttributeKey(key)}
                         </label>
-                        <div className="attribute-value">
-                          {formatAttributeValue(value)}
+                        <div className="attribute-value-container">
+                          <div className="attribute-value">
+                            {isEmpty ? (
+                              <span className="text-muted font-italic">No information available</span>
+                            ) : (
+                              formatAttributeValue(value)
+                            )}
+                          </div>
+                          {isEmpty && (
+                            <div className="mt-2">
+                              <RequestAttributeButton
+                                attributeName={key}
+                                entityId={entityId}
+                                currentUser={currentUser}
+                                entityOwner={entity.user_id}
+                                tenantId={tenantId || entity.tenant_id}
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
                     </Col>
