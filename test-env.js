@@ -1,15 +1,12 @@
 require('dotenv').config({ path: '.env.local' });
 
-console.log('Environment variables check:');
-console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'SET' : 'NOT SET');
-console.log('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
-console.log('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET');
+console.log('Environment Variables Test:');
+console.log('==========================');
+console.log('API_TOKENS:', process.env.API_TOKENS);
+console.log('ALLOWED_DOMAINS:', process.env.ALLOWED_DOMAINS);
+console.log('ONESIGNAL_API_KEY:', process.env.ONESIGNAL_API_KEY ? 'SET' : 'NOT SET');
+console.log('ONESIGNAL_APP_ID:', process.env.ONESIGNAL_APP_ID ? 'SET' : 'NOT SET');
 
-if (process.env.SUPABASE_URL) {
-    console.log('SUPABASE_URL value:', process.env.SUPABASE_URL);
-}
-
-console.log('\nAll environment variables containing SUPABASE:');
-Object.keys(process.env).filter(key => key.includes('SUPABASE')).forEach(key => {
-    console.log(`${key}: ${process.env[key] ? 'SET' : 'NOT SET'}`);
-});
+const tokens = process.env.API_TOKENS ? process.env.API_TOKENS.split(',') : [];
+console.log('\nValid API Tokens:', tokens);
+console.log('Test token check:', tokens.includes('test-token-123'));

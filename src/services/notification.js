@@ -79,11 +79,15 @@ class NotificationService {
    */
   async mergeDeviceSubscription(deviceToken, userId, tenantContext) {
     try {
-      const { data, error } = await this.db.rpc('merge_device_subscription', {
-        p_device_token: deviceToken,
-        p_user_id: userId,
-        p_tenant_context: tenantContext
-      });
+      // Update the device subscription to associate it with the user
+      const { data, error } = await this.db.table('mtcli_push_subscriptions')
+        .update({
+          user_id: userId,
+          last_used_at: new Date().toISOString()
+        })
+        .eq('device_token', deviceToken)
+        .eq('tenant_context', tenantContext)
+        .select();
 
       if (error) {
         return { success: false, error: error.message };
@@ -102,10 +106,11 @@ class NotificationService {
    */
   async getUserSubscriptions(userId, tenantContext) {
     try {
-      const { data, error } = await this.db.rpc('get_user_subscriptions', {
-        p_user_id: userId,
-        p_tenant_context: tenantContext
-      });
+      const { data, error } = await this.db.table('mtcli_push_subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('tenant_context', tenantContext)
+        .eq('is_active', true);
 
       if (error) {
         return { success: false, error: error.message };
