@@ -9,10 +9,31 @@ class OneSignalService {
   async initialize() {
     if (this.isInitialized) return;
 
+    // Skip OneSignal initialization in development if not properly configured
+    const isProduction = import.meta.env.PROD;
+    const currentOrigin = window.location.origin;
+    const oneSignalAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
+    
+    // Check if we're in development and OneSignal is not configured for localhost
+    if (!isProduction && currentOrigin.includes('localhost')) {
+      console.log('🔔 OneSignal disabled for localhost development environment');
+      console.log('💡 To enable OneSignal in development, configure it for localhost in OneSignal dashboard');
+      this.isInitialized = true; // Mark as initialized to prevent repeated attempts
+      return;
+    }
+
+    if (!oneSignalAppId) {
+      console.warn('⚠️  OneSignal App ID not configured, skipping initialization');
+      this.isInitialized = true;
+      return;
+    }
+
     try {
+      console.log('🔔 Initializing OneSignal for:', currentOrigin);
+      
       // Initialize OneSignal
       await OneSignal.init({
-        appId: import.meta.env.VITE_ONESIGNAL_APP_ID,
+        appId: oneSignalAppId,
         safari_web_id: import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID,
         notifyButton: {
           enable: true,
@@ -33,9 +54,11 @@ class OneSignalService {
       });
 
       this.isInitialized = true;
-      console.log('OneSignal initialized successfully');
+      console.log('✅ OneSignal initialized successfully');
     } catch (error) {
-      console.error('OneSignal initialization failed:', error);
+      console.error('❌ OneSignal initialization failed:', error);
+      // Don't throw the error - just log it and continue
+      this.isInitialized = true; // Mark as initialized to prevent repeated attempts
     }
   }
 
@@ -82,6 +105,11 @@ class OneSignalService {
   }
 
   async requestPermission() {
+    if (!this.isInitialized) {
+      console.log('OneSignal not initialized, skipping permission request');
+      return false;
+    }
+    
     try {
       const permission = await OneSignal.requestPermission();
       console.log('OneSignal permission granted:', permission);
@@ -93,6 +121,11 @@ class OneSignalService {
   }
 
   async getPlayerId() {
+    if (!this.isInitialized) {
+      console.log('OneSignal not initialized, skipping getPlayerId');
+      return null;
+    }
+    
     try {
       const playerId = await OneSignal.getPlayerId();
       this.playerId = playerId;
@@ -104,6 +137,11 @@ class OneSignalService {
   }
 
   async isSubscribed() {
+    if (!this.isInitialized) {
+      console.log('OneSignal not initialized, skipping isSubscribed');
+      return false;
+    }
+    
     try {
       return await OneSignal.isSubscribed();
     } catch (error) {
@@ -113,6 +151,11 @@ class OneSignalService {
   }
 
   async setUserEmail(email) {
+    if (!this.isInitialized) {
+      console.log('OneSignal not initialized, skipping setUserEmail');
+      return;
+    }
+    
     try {
       await OneSignal.setEmail(email);
       console.log('OneSignal email set:', email);
@@ -122,6 +165,11 @@ class OneSignalService {
   }
 
   async setUserTags(tags) {
+    if (!this.isInitialized) {
+      console.log('OneSignal not initialized, skipping setUserTags');
+      return;
+    }
+    
     try {
       await OneSignal.sendTags(tags);
       console.log('OneSignal tags set:', tags);
@@ -131,6 +179,11 @@ class OneSignalService {
   }
 
   async showNotification(title, message, url) {
+    if (!this.isInitialized) {
+      console.log('OneSignal not initialized, skipping showNotification');
+      return;
+    }
+    
     try {
       await OneSignal.showLocalNotification(title, message, url);
     } catch (error) {

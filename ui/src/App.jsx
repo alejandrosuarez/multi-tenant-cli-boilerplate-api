@@ -16,9 +16,19 @@ function App() {
 
   useEffect(() => {
     checkAuth();
-    // Initialize OneSignal for push notifications
-    oneSignalService.initialize();
+    // Initialize OneSignal for push notifications (safely)
+    initializeOneSignal();
   }, []);
+  
+  const initializeOneSignal = async () => {
+    try {
+      await oneSignalService.initialize();
+      console.log('OneSignal service initialized');
+    } catch (error) {
+      console.error('Failed to initialize OneSignal:', error);
+      // Don't let OneSignal errors break the app
+    }
+  };
 
   const checkAuth = async () => {
     const token = localStorage.getItem('token');
