@@ -658,14 +658,20 @@ fastify.post('/api/auth/verify-otp', async (request, reply) => {
   }
 
   try {
+    console.log(`🔍 Verifying OTP for ${email} (${tenantId || 'default'})`);
     const result = await otpService.verifyOTP(email, otp, tenantId || 'default');
     
     if (result.valid) {
+      console.log(`✅ OTP verified successfully for ${email}`);
+      
       // Generate persistent authentication token
       const token = auth.generatePersistentToken({
+        id: email, // Use email as ID for OTP-based auth
         email: email,
         tenantId: tenantId || 'default'
       });
+      
+      console.log(`🎉 Generated persistent token for ${email}`);
 
       // Log successful authentication
       await db.logInteraction(
@@ -684,10 +690,12 @@ fastify.post('/api/auth/verify-otp', async (request, reply) => {
         timestamp: result.timestamp
       };
     } else {
+      console.log(`❌ OTP verification failed for ${email}: ${result.error}`);
       reply.status(400);
       return { error: result.error };
     }
   } catch (error) {
+    console.log(`🚨 OTP verification error for ${email}: ${error.message}`);
     reply.status(500);
     return { error: error.message };
   }
@@ -908,6 +916,7 @@ fastify.get('/api/debug/session-stats', async (request, reply) => {
 
   return {
     activeSessions: auth.getActiveSessionsCount(),
+    sessionDetails: auth.getSessionDetails(),
     timestamp: new Date().toISOString()
   };
 });

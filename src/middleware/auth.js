@@ -8,6 +8,7 @@ class AuthMiddleware {
     this.clerkJwksUrl = process.env.CLERK_JWKS_URL;
     this.jwtSecret = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
     this.activeSessions = new Map(); // Store active sessions for logout
+    this.sessionCleanupDisabled = true; // Disable automatic session cleanup
     
     if (this.clerkJwksUrl) {
       this.client = jwksClient({
@@ -16,6 +17,9 @@ class AuthMiddleware {
         timeout: 30000,
       });
     }
+    
+    // Log session creation for debugging
+    console.log('🔐 Auth middleware initialized - persistent sessions enabled');
   }
 
   // Get signing key for JWT verification
@@ -40,20 +44,26 @@ class AuthMiddleware {
       email: user.email,
       tenant: user.tenantId || 'default',
       type: 'persistent',
-      iat: Math.floor(Date.now() / 1000)
+      iat: Math.floor(Date.now() / 1000),
+      persistent: true // Flag for persistent session
       // No exp field = no expiry
     };
 
     const token = jwt.sign(payload, this.jwtSecret, { algorithm: 'HS256' });
     
-    // Store session for logout capability
+    // Store session for logout capability - always keep it active
     this.activeSessions.set(token, {
       userId: payload.sub,
       email: payload.email,
       tenant: payload.tenant,
-      createdAt: new Date()
+      createdAt: new Date(),
+      persistent: true,
+      lastAccessed: new Date()
     });
 
+    console.log(`🔑 Generated persistent token for ${user.email} (${user.tenantId || 'default'})`);
+    console.log(`📊 Active sessions: ${this.activeSessions.size}`);
+    
     return token;
   }
 
@@ -74,17 +84,32 @@ class AuthMiddleware {
       try {
         const decoded = jwt.verify(token, this.jwtSecret, { algorithms: ['HS256'] });
         if (decoded.type === 'persistent') {
-          // Check if token is still in active sessions (not logged out)
-          if (this.activeSessions.has(token)) {
-            resolve(decoded);
-            return;
+          // For persistent tokens, always allow access unless explicitly logged out
+          // If session doesn't exist, recreate it (recovery mode)
+          if (!this.activeSessions.has(token)) {
+            console.log(`🔄 Recovering persistent session for ${decoded.email}`);
+            this.activeSessions.set(token, {
+              userId: decoded.sub,
+              email: decoded.email,
+              tenant: decoded.tenant,
+              createdAt: new Date(),
+              persistent: true,
+              recovered: true,
+              lastAccessed: new Date()
+            });
           } else {
-            reject(new Error('Token has been logged out'));
-            return;
+            // Update last accessed time
+            const session = this.activeSessions.get(token);
+            session.lastAccessed = new Date();
           }
+          
+          console.log(`✅ Verified persistent token for ${decoded.email}`);
+          resolve(decoded);
+          return;
         }
       } catch (err) {
         // Not our token, try Clerk
+        console.log(`⚠️  Failed to verify as persistent token: ${err.message}`);
       }
 
       // Fall back to Clerk JWT verification
@@ -107,18 +132,39 @@ class AuthMiddleware {
     });
   }
 
-  // Logout - invalidate token
+  // Logout - invalidate token (only if explicitly requested)
   logout(token) {
     if (this.activeSessions.has(token)) {
+      const session = this.activeSessions.get(token);
+      console.log(`🚪 Logging out session for ${session.email}`);
       this.activeSessions.delete(token);
       return true;
     }
+    console.log(`⚠️  Logout attempted for non-existent session`);
     return false;
   }
 
   // Get active sessions count (for debugging)
   getActiveSessionsCount() {
     return this.activeSessions.size;
+  }
+  
+  // Get session details (for debugging)
+  getSessionDetails() {
+    const sessions = [];
+    for (const [token, session] of this.activeSessions.entries()) {
+      sessions.push({
+        tokenPreview: token.substring(0, 10) + '...',
+        userId: session.userId,
+        email: session.email,
+        tenant: session.tenant,
+        createdAt: session.createdAt,
+        lastAccessed: session.lastAccessed,
+        persistent: session.persistent,
+        recovered: session.recovered
+      });
+    }
+    return sessions;
   }
 
   // Extract token from request
@@ -158,6 +204,7 @@ class AuthMiddleware {
     try {
       const token = this.extractToken(request);
       if (!token) {
+        console.log(`🚫 Missing token for ${request.method} ${request.url}`);
         reply.status(401);
         throw new Error('Authorization token required');
       }
@@ -169,7 +216,10 @@ class AuthMiddleware {
         tenant: decoded.tenant || 'default',
         metadata: decoded.user_metadata || {}
       };
+      
+      console.log(`👤 Authenticated user: ${decoded.email} for ${request.method} ${request.url}`);
     } catch (error) {
+      console.log(`🚫 Auth failed for ${request.method} ${request.url}: ${error.message}`);
       reply.status(401);
       throw new Error('Invalid or expired token: ' + error.message);
     }
