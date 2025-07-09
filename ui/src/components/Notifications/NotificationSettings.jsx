@@ -104,6 +104,34 @@ const NotificationSettings = ({ user }) => {
         </button>
         
         <button 
+          className="btn btn-info me-2" 
+          onClick={async () => {
+            if (window.OneSignalDebug) {
+              await window.OneSignalDebug.debugStatus();
+            } else {
+              console.log('OneSignal Debug not available');
+            }
+          }}
+          disabled={loading}
+        >
+          <i className="fas fa-bug"></i> Debug Status
+        </button>
+        
+        <button 
+          className="btn btn-warning me-2" 
+          onClick={async () => {
+            if (window.OneSignalDebug) {
+              await window.OneSignalDebug.forceSubscription();
+            } else {
+              console.log('OneSignal Debug not available');
+            }
+          }}
+          disabled={loading}
+        >
+          <i className="fas fa-bell"></i> Force Subscribe
+        </button>
+        
+        <button 
           className="btn btn-secondary" 
           onClick={() => window.location.reload()}
           disabled={loading}

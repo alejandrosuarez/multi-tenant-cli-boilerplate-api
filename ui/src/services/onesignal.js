@@ -9,14 +9,80 @@ class OneSignalService {
   async initialize() {
     if (this.isInitialized) return;
 
-    // DISABLED: Let OneSignal handle native bell notification system
-    // OneSignal provides a better built-in bell UI that handles subscription flow
-    console.log('🔔 OneSignal custom implementation disabled');
-    console.log('💡 OneSignal native bell will handle subscriptions automatically');
-    console.log('🎯 Users can subscribe via OneSignal bell widget');
+    const isProduction = import.meta.env.PROD;
+    const currentOrigin = window.location.origin;
+    const oneSignalAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
     
-    this.isInitialized = true;
-    return;
+    // Skip initialization in development if not configured for localhost
+    if (!isProduction && currentOrigin.includes('localhost')) {
+      console.log('🔔 OneSignal disabled for localhost development environment');
+      console.log('💡 To enable OneSignal in development, configure it for localhost in OneSignal dashboard');
+      this.isInitialized = true;
+      return;
+    }
+
+    if (!oneSignalAppId) {
+      console.warn('⚠️  OneSignal App ID not configured, skipping initialization');
+      this.isInitialized = true;
+      return;
+    }
+
+    try {
+      console.log('🔔 Initializing OneSignal with native bell for:', currentOrigin);
+      
+      // Initialize OneSignal with native bell enabled
+      await OneSignal.init({
+        appId: oneSignalAppId,
+        safari_web_id: import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID,
+        notifyButton: {
+          enable: true,
+          size: 'medium',
+          theme: 'default',
+          position: 'bottom-right',
+          colors: {
+            'circle.background': '#0078ff',
+            'circle.foreground': 'white',
+            'badge.background': '#ff0000',
+            'badge.foreground': 'white'
+          }
+        },
+        allowLocalhostAsSecureOrigin: true,
+        autoRegister: true,
+        autoResubscribe: true,
+      });
+
+      // Set up event listeners for debugging
+      OneSignal.on('subscriptionChange', (isSubscribed) => {
+        console.log('🔔 OneSignal subscription changed:', isSubscribed);
+        if (isSubscribed) {
+          this.handleSubscriptionChange();
+        }
+      });
+
+      OneSignal.on('notificationPermissionChange', (permission) => {
+        console.log('🔔 OneSignal notification permission changed:', permission);
+      });
+
+      // Log current subscription status
+      setTimeout(async () => {
+        try {
+          const isSubscribed = await OneSignal.isSubscribed();
+          const playerId = await OneSignal.getPlayerId();
+          console.log('📊 OneSignal Status Check:');
+          console.log('  - Subscribed:', isSubscribed);
+          console.log('  - Player ID:', playerId);
+          console.log('  - Permission:', Notification.permission);
+        } catch (error) {
+          console.error('🚫 Error checking OneSignal status:', error);
+        }
+      }, 3000);
+
+      this.isInitialized = true;
+      console.log('✅ OneSignal initialized successfully with native bell');
+    } catch (error) {
+      console.error('❌ OneSignal initialization failed:', error);
+      this.isInitialized = true;
+    }
     
     // ORIGINAL CODE COMMENTED OUT FOR FUTURE REFERENCE
     /*
@@ -206,6 +272,100 @@ class OneSignalService {
       console.error('Error showing local notification:', error);
     }
   }
+  
+  // Debug method to check detailed subscription status
+  async debugSubscriptionStatus() {
+    if (!this.isInitialized) {
+      console.log('OneSignal not initialized');
+      return;
+    }
+    
+    try {
+      console.log('\n🔍 OneSignal Debug Status:');
+      console.log('=' .repeat(50));
+      
+      const isSubscribed = await OneSignal.isSubscribed();
+      const playerId = await OneSignal.getPlayerId();
+      const permission = await OneSignal.getNotificationPermission();
+      const isPushSupported = OneSignal.isPushNotificationsSupported();
+      
+      console.log('Subscription Status:', isSubscribed);
+      console.log('Player ID:', playerId);
+      console.log('Permission:', permission);
+      console.log('Push Supported:', isPushSupported);
+      console.log('Browser Permission:', Notification.permission);
+      
+      // Check if service worker is registered
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        console.log('Service Worker Registrations:', registrations.length);
+        registrations.forEach((reg, index) => {
+          console.log(`  SW ${index + 1}:`, reg.scope);
+        });
+      }
+      
+      console.log('=' .repeat(50));
+      
+      return {
+        isSubscribed,
+        playerId,
+        permission,
+        isPushSupported,
+        browserPermission: Notification.permission
+      };
+    } catch (error) {
+      console.error('Error debugging OneSignal status:', error);
+      return { error: error.message };
+    }
+  }
+  
+  // Method to manually trigger subscription (for debugging)
+  async forceSubscription() {
+    if (!this.isInitialized) {
+      console.log('OneSignal not initialized');
+      return;
+    }
+    
+    try {
+      console.log('🔔 Attempting to force subscription...');
+      const permission = await OneSignal.requestPermission();
+      console.log('Permission result:', permission);
+      
+      if (permission) {
+        // Wait a bit and check status
+        setTimeout(async () => {
+          const status = await this.debugSubscriptionStatus();
+          console.log('Status after force subscription:', status);
+        }, 2000);
+      }
+      
+      return permission;
+    } catch (error) {
+      console.error('Error forcing subscription:', error);
+      return false;
+    }
+  }
 }
 
-export default new OneSignalService();
+const oneSignalService = new OneSignalService();
+
+// Make available in browser console for debugging
+if (typeof window !== 'undefined') {
+  window.OneSignalDebug = {
+    service: oneSignalService,
+    debugStatus: () => oneSignalService.debugSubscriptionStatus(),
+    forceSubscription: () => oneSignalService.forceSubscription(),
+    checkSubscription: () => oneSignalService.isSubscribed(),
+    getPlayerId: () => oneSignalService.getPlayerId(),
+    setExternalUserId: (id) => oneSignalService.setExternalUserId(id),
+    setUserEmail: (email) => oneSignalService.setUserEmail(email)
+  };
+  
+  console.log('🔔 OneSignal Debug Tools Available:');
+  console.log('- window.OneSignalDebug.debugStatus()');
+  console.log('- window.OneSignalDebug.forceSubscription()');
+  console.log('- window.OneSignalDebug.checkSubscription()');
+  console.log('- window.OneSignalDebug.getPlayerId()');
+}
+
+export default oneSignalService;

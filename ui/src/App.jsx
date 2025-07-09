@@ -22,12 +22,11 @@ function App() {
   
   const initializeOneSignal = async () => {
     try {
-      // DISABLED: Let OneSignal handle native bell notification system
-      console.log('🔔 OneSignal custom initialization disabled');
-      console.log('💡 OneSignal will use native bell widget instead');
-      // await oneSignalService.initialize();
+      console.log('🔔 Initializing OneSignal with native bell...');
+      await oneSignalService.initialize();
+      console.log('✅ OneSignal initialization completed');
     } catch (error) {
-      console.error('Failed to initialize OneSignal:', error);
+      console.error('❌ Failed to initialize OneSignal:', error);
     }
   };
 
@@ -50,30 +49,46 @@ function App() {
   const handleAuth = async (userData, token) => {
     setUser(userData);
     
-    // DISABLED: OneSignal user context setup
-    // Let OneSignal native bell handle user management
+    // Set up OneSignal user context after login
     console.log('👤 User authenticated:', userData.email);
-    console.log('🔔 OneSignal native bell will handle user subscription');
     
-    /* ORIGINAL CODE COMMENTED OUT
-    try {
-      const externalUserId = userData.id || userData.email;
-      await oneSignalService.setExternalUserId(externalUserId);
-      
-      if (userData.email) {
-        await oneSignalService.setUserEmail(userData.email);
+    // Give OneSignal a moment to initialize, then set user context
+    setTimeout(async () => {
+      try {
+        const externalUserId = userData.id || userData.email;
+        console.log('🔔 Setting OneSignal external user ID:', externalUserId);
+        
+        await oneSignalService.setExternalUserId(externalUserId);
+        
+        if (userData.email) {
+          await oneSignalService.setUserEmail(userData.email);
+        }
+        
+        await oneSignalService.setUserTags({
+          userId: externalUserId,
+          tenantId: userData.tenantId || 'default'
+        });
+        
+        console.log('✅ OneSignal user context set up for:', externalUserId);
+        
+        // Check subscription status after setting user context
+        setTimeout(async () => {
+          try {
+            const isSubscribed = await OneSignal.isSubscribed();
+            const playerId = await OneSignal.getPlayerId();
+            console.log('📊 Post-Auth OneSignal Status:');
+            console.log('  - Subscribed:', isSubscribed);
+            console.log('  - Player ID:', playerId);
+            console.log('  - External User ID:', externalUserId);
+          } catch (error) {
+            console.error('🚫 Error checking post-auth OneSignal status:', error);
+          }
+        }, 2000);
+        
+      } catch (error) {
+        console.error('❌ Error setting up OneSignal user context:', error);
       }
-      
-      await oneSignalService.setUserTags({
-        userId: externalUserId,
-        tenantId: userData.tenantId || 'default'
-      });
-      
-      console.log('OneSignal user context set up for:', externalUserId);
-    } catch (error) {
-      console.error('Error setting up OneSignal user context:', error);
-    }
-    */
+    }, 1000); // Wait 1 second for OneSignal to be ready
   };
 
   const handleLogout = () => {
