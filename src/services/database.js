@@ -1,5 +1,13 @@
 const { createClient } = require('@supabase/supabase-js');
 
+// Initialize Sentry if available
+let Sentry = null;
+try {
+  Sentry = require('@sentry/node');
+} catch (e) {
+  // Sentry not available
+}
+
 class DatabaseService {
   constructor() {
     this.supabase = null;
@@ -70,9 +78,35 @@ class DatabaseService {
 
       const { data, error } = await this.table('entities').insert(entityToCreate).select().single();
       
-      if (error) throw error;
+      if (error) {
+        const errorMsg = `[DB-Fail] operation=create entityId=${entityToCreate.id}`;
+        console.error(errorMsg, error);
+        if (Sentry) {
+          Sentry.captureException(error, { 
+            tags: { 
+              entityId: entityToCreate.id, 
+              tenantId: entityToCreate.tenant_id,
+              operation: 'entity_create'
+            }
+          });
+        }
+        throw error;
+      }
+      
+      console.info(`[DB-Success] operation=create entityId=${entityToCreate.id}`);
       return { success: true, data };
     } catch (err) {
+      const errorMsg = `[DB-Create-Error] entityId=${entityToCreate.id || 'unknown'}`;
+      console.error(errorMsg, err);
+      if (Sentry) {
+        Sentry.captureException(err, { 
+          tags: { 
+            entityId: entityToCreate.id || 'unknown', 
+            tenantId: entityToCreate.tenant_id || 'unknown',
+            operation: 'entity_create'
+          }
+        });
+      }
       return { success: false, error: err.message };
     }
   }
@@ -172,12 +206,36 @@ class DatabaseService {
       const { data, error } = await this.table('interactionLogs').insert(logData);
       
       if (error) {
-        console.error('Failed to log interaction:', error);
+        const errorMsg = `[DB-Fail] operation=log_interaction userId=${userId} eventType=${eventType}`;
+        console.error(errorMsg, error);
+        if (Sentry) {
+          Sentry.captureException(error, { 
+            tags: { 
+              userId, 
+              eventType,
+              entityId: entityId || 'none',
+              operation: 'interaction_log'
+            }
+          });
+        }
+      } else {
+        console.info(`[DB-Success] operation=log_interaction userId=${userId} eventType=${eventType}`);
       }
 
       return { success: !error, data, error };
     } catch (err) {
-      console.error('Interaction logging error:', err);
+      const errorMsg = `[DB-Log-Error] userId=${userId} eventType=${eventType}`;
+      console.error(errorMsg, err);
+      if (Sentry) {
+        Sentry.captureException(err, { 
+          tags: { 
+            userId, 
+            eventType,
+            entityId: entityId || 'none',
+            operation: 'interaction_log'
+          }
+        });
+      }
       return { success: false, error: err.message };
     }
   }

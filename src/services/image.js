@@ -2,6 +2,14 @@ const { createClient } = require('@supabase/supabase-js');
 const sharp = require('sharp');
 const crypto = require('crypto');
 
+// Initialize Sentry if available
+let Sentry = null;
+try {
+  Sentry = require('@sentry/node');
+} catch (e) {
+  // Sentry not available
+}
+
 class ImageService {
   constructor(databaseService) {
     this.supabase = createClient(
@@ -34,42 +42,45 @@ class ImageService {
         });
         
         if (error) {
-          console.error('Bucket creation error:', error);
+          const errorMsg = `[Bucket-Create-Fail] bucket=${this.bucketName}`;
+          console.error(errorMsg, error);
+          if (Sentry) {
+            Sentry.captureException(error, { 
+              tags: { bucketName: this.bucketName, operation: 'bucket_create' }
+            });
+          }
           return { success: false, error: error.message };
         }
+        console.info(`[Bucket-Create-Success] bucket=${this.bucketName}`);
       }
       
       return { success: true };
     } catch (error) {
-      console.error('Bucket initialization error:', error);
+      const errorMsg = `[Bucket-Init-Fail] bucket=${this.bucketName}`;
+      console.error(errorMsg, error);
+      if (Sentry) {
+        Sentry.captureException(error, { 
+          tags: { bucketName: this.bucketName, operation: 'bucket_init' }
+        });
+      }
       return { success: false, error: error.message };
     }
   }
 
   // Optimize image for different sizes
-  async optimizeImage(buffer, size = 'medium') {
+  async optimizeImage(buffer, size='medium') {
+    const config = this.sizes[size] || this.sizes.medium;
     try {
-      if (!buffer || buffer.length === 0) {
-        throw new Error(`Invalid buffer: ${buffer ? 'empty buffer' : 'null/undefined buffer'}`);
-      }
-      
-      console.log(`🔧 Optimizing image for size: ${size}, buffer length: ${buffer.length}`);
-      
-      const config = this.sizes[size] || this.sizes.medium;
-      
-      const optimized = await sharp(buffer)
-        .resize(config.width, config.height, {
-          fit: 'inside',
-          withoutEnlargement: true
-        })
-        .jpeg({ quality: config.quality, progressive: true })
-        .toBuffer();
-
-      console.log(`✅ Image optimized for ${size}: ${optimized.length} bytes`);
-      return { success: true, buffer: optimized };
-    } catch (error) {
-      console.error(`❌ Image optimization error for size ${size}:`, error.message);
-      return { success: false, error: error.message };
+      return {
+        success: true,
+        buffer: await sharp(buffer)
+          .resize(config.width, config.height, { fit:'inside', withoutEnlargement:true })
+          .jpeg({ quality: config.quality, progressive: true })
+          .toBuffer()
+      };
+    } catch (err) {
+      console.error(`[Sharp-Fail] size=${size}`, err);
+      return { success:false, error:err.message, buffer }; // pass original
     }
   }
 
@@ -82,37 +93,107 @@ class ImageService {
   }
 
   // Upload single image with multiple sizes
-  async uploadImage(fileBuffer, originalName, entityId, tenantId, userId, label = null) {
+async uploadImage(fileBuffer, originalName, entityId, tenantId, userId, mimetype, label = null) {
+    const imageId = crypto.randomUUID();
+    const basePath = `${tenantId}/${entityId}`;
+    
     try {
       // Initialize bucket if needed
       await this.initializeBucket();
 
-      const imageId = crypto.randomUUID();
-      const basePath = `${tenantId}/${entityId}`;
       const uploadResults = {};
+      const ext = originalName.split('.').pop().toLowerCase();
 
-      // Upload original and optimized versions
+      // First, always upload the original image to guarantee at least one valid URL
+      const originalFilename = `original.${ext}`;
+      const originalPath = `${basePath}/${imageId}/${originalFilename}`;
+      
+      const { data: originalData, error: originalError } = await this.supabase.storage
+        .from(this.bucketName)
+        .upload(originalPath, fileBuffer, {
+          contentType: mimetype,
+          cacheControl: '3600'
+        });
+
+      if (originalError) {
+        const errorMsg = `[Upload-Fail] size=original imageId=${imageId} file=${originalName}`;
+        console.error(errorMsg, originalError);
+        if (Sentry) {
+          Sentry.captureException(originalError, { 
+            tags: { 
+              imageId, 
+              entityId, 
+              tenantId, 
+              userId, 
+              size: 'original',
+              operation: 'storage_upload'
+            }
+          });
+        }
+        return { success: false, error: 'Failed to upload original image' };
+      }
+      
+      console.info(`[Upload-Success] size=original imageId=${imageId} file=${originalName}`);
+      
+      try {
+
+      // Get public URL for original
+      const { data: originalUrlData } = this.supabase.storage
+        .from(this.bucketName)
+        .getPublicUrl(originalPath);
+
+      // Store original in file_urls
+      uploadResults['original'] = {
+        path: originalPath,
+        url: originalUrlData.publicUrl,
+        size: fileBuffer.length,
+        is_fallback: false
+      };
+
+      // Now upload optimized versions
       for (const [sizeName, config] of Object.entries(this.sizes)) {
-        const optimized = await this.optimizeImage(fileBuffer, sizeName);
+const optimized = await this.optimizeImage(fileBuffer, sizeName);
         
+        let bufferToUpload = optimized.buffer;
+        let isFallback = false;
+
         if (!optimized.success) {
-          continue; // Skip this size if optimization fails
+          console.info(`[Optimize-Fallback] size=${sizeName} imageId=${imageId}`);
+          bufferToUpload = fileBuffer; // Use fallback buffer
+          isFallback = true;
         }
 
         const filename = this.generateFilename(originalName, sizeName);
         const filePath = `${basePath}/${imageId}/${filename}`;
 
+        // Use JPEG for optimized images (Sharp converts to JPEG), original mimetype for fallback
+        const contentType = isFallback ? mimetype : 'image/jpeg';
+
         const { data, error } = await this.supabase.storage
           .from(this.bucketName)
-          .upload(filePath, optimized.buffer, {
-            contentType: 'image/jpeg',
+          .upload(filePath, bufferToUpload, {
+            contentType: contentType,
             cacheControl: '3600'
           });
 
         if (error) {
-          console.error(`Upload error for ${sizeName}:`, error);
+          const errorMsg = `[Upload-Fail] size=${sizeName} imageId=${imageId} file=${originalName}`;
+          console.error(errorMsg, error);
+          if (Sentry) {
+            Sentry.captureException(error, { 
+              tags: { 
+                imageId, 
+                entityId, 
+                tenantId, 
+                userId, 
+                size: sizeName,
+                operation: 'storage_upload'
+              }
+            });
+          }
           continue;
         }
+        console.info(`[Upload-Success] size=${sizeName} imageId=${imageId} file=${originalName}`);
 
         // Get public URL
         const { data: urlData } = this.supabase.storage
@@ -122,7 +203,8 @@ class ImageService {
         uploadResults[sizeName] = {
           path: filePath,
           url: urlData.publicUrl,
-          size: optimized.buffer.length
+          size: bufferToUpload.length,
+          is_fallback: isFallback
         };
       }
 
@@ -147,11 +229,26 @@ class ImageService {
         .single();
 
       if (dbError) {
-        console.error('Database insert error:', dbError);
+        const errorMsg = `[DB-Fail] imageId=${imageId} entityId=${entityId}`;
+        console.error(errorMsg, dbError);
+        if (Sentry) {
+          Sentry.captureException(dbError, { 
+            tags: { 
+              imageId, 
+              entityId, 
+              tenantId, 
+              userId,
+              operation: 'db_insert'
+            }
+          });
+        }
+
         // Clean up uploaded files if DB insert fails
         await this.deleteImageFiles(imageId, tenantId, entityId);
         return { success: false, error: 'Failed to save image metadata' };
       }
+
+      console.info(`[DB-Success] imageId=${imageId} entityId=${entityId}`);
 
       return {
         success: true,
@@ -170,9 +267,21 @@ class ImageService {
       };
 
     } catch (error) {
-      console.error('Image upload error:', error);
+      const errorMsg = `[Upload-General-Fail] imageId=${imageId}`;
+      console.error(errorMsg, error);
+      if (Sentry) {
+        Sentry.captureException(error, { 
+          tags: { 
+            imageId, 
+            entityId, 
+            tenantId, 
+            userId,
+            operation: 'general'
+          }
+        });
+      }
       return { success: false, error: error.message };
-    }
+
   }
 
   // Get images for an entity
@@ -186,12 +295,33 @@ class ImageService {
         .order('created_at', { ascending: false });
 
       if (error) {
+        const errorMsg = `[DB-Fail] operation=get_images entityId=${entityId}`;
+        console.error(errorMsg, error);
+        if (Sentry) {
+          Sentry.captureException(error, { 
+            tags: { 
+              entityId, 
+              tenantId,
+              operation: 'db_select'
+            }
+          });
+        }
         return { success: false, error: error.message };
       }
 
       return { success: true, data: data || [] };
     } catch (error) {
-      console.error('Get images error:', error);
+      const errorMsg = `[DB-Get-Error] operation=get_images entityId=${entityId}`;
+      console.error(errorMsg, error);
+      if (Sentry) {
+        Sentry.captureException(error, { 
+          tags: { 
+            entityId, 
+            tenantId,
+            operation: 'db_select'
+          }
+        });
+      }
       return { success: false, error: error.message };
     }
   }
@@ -208,6 +338,17 @@ class ImageService {
         .single();
 
       if (fetchError || !imageRecord) {
+        const errorMsg = `[DB-Fail] operation=get_image imageId=${imageId}`;
+        console.error(errorMsg, fetchError);
+        if (Sentry && fetchError) {
+          Sentry.captureException(fetchError, { 
+            tags: { 
+              imageId, 
+              tenantId,
+              operation: 'db_select'
+            }
+          });
+        }
         return { success: false, error: 'Image not found' };
       }
 
@@ -230,13 +371,34 @@ class ImageService {
         .eq('id', imageId);
 
       if (dbError) {
-        console.error('Database delete error:', dbError);
+        const errorMsg = `[DB-Fail] operation=delete_image imageId=${imageId}`;
+        console.error(errorMsg, dbError);
+        if (Sentry) {
+          Sentry.captureException(dbError, { 
+            tags: { 
+              imageId, 
+              tenantId,
+              operation: 'db_delete'
+            }
+          });
+        }
         return { success: false, error: 'Failed to delete image record' };
       }
 
+      console.info(`[DB-Success] operation=delete_image imageId=${imageId}`);
       return { success: true, message: 'Image deleted successfully' };
     } catch (error) {
-      console.error('Delete image error:', error);
+      const errorMsg = `[Delete-Error] imageId=${imageId}`;
+      console.error(errorMsg, error);
+      if (Sentry) {
+        Sentry.captureException(error, { 
+          tags: { 
+            imageId, 
+            tenantId,
+            operation: 'general'
+          }
+        });
+      }
       return { success: false, error: error.message };
     }
   }
@@ -282,9 +444,11 @@ class ImageService {
   // Get optimized image URL with size parameter
   getImageUrl(imageRecord, size = 'medium') {
     if (!imageRecord.file_urls || !imageRecord.file_urls[size]) {
-      // Fallback to available size
+      // Fallback to 'original' first, then any available size
       const availableSizes = Object.keys(imageRecord.file_urls || {});
-      if (availableSizes.length > 0) {
+      if (availableSizes.includes('original')) {
+        size = 'original';
+      } else if (availableSizes.length > 0) {
         size = availableSizes[0];
       } else {
         return null;
