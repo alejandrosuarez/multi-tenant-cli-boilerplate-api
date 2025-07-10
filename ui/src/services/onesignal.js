@@ -31,10 +31,13 @@ class OneSignalService {
     try {
       console.log('🔔 Initializing OneSignal with native bell for:', currentOrigin);
       
-      // Initialize OneSignal with native bell enabled
+      // Initialize OneSignal with explicit service worker paths
       await OneSignal.init({
         appId: oneSignalAppId,
         safari_web_id: import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID,
+        serviceWorkerPath: '/OneSignalSDKWorker.js',
+        serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
+        path: '/',
         notifyButton: {
           enable: true,
           size: 'medium',

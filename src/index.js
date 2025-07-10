@@ -25,6 +25,13 @@ fastify.register(require('@fastify/multipart'), {
   }
 });
 
+// Register static file support for OneSignal service workers
+fastify.register(require('@fastify/static'), {
+  root: path.join(__dirname, '..', 'ui', 'public'),
+  prefix: '/', // serve files from root
+  decorateReply: false // disable decorateReply to avoid conflicts
+});
+
 // Load environment variables
 require('dotenv').config({ path: '.env.local' });
 
