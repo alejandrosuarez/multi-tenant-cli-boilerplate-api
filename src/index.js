@@ -495,8 +495,9 @@ fastify.post('/api/entities/:id/images', {
 
     const uploadResults = [];
     
-    // Get label from form data if provided
+    // Get label and fallback flag from form data if provided
     const label = request.body?.label || null;
+    const isFallback = request.body?.is_fallback === 'true' || request.body?.is_fallback === true;
     
     for (const file of files) {
       // Validate file type
@@ -533,7 +534,9 @@ fastify.post('/api/entities/:id/images', {
         entityId,
         tenantId,
         request.user.id,
-        label
+        file.mimetype,
+        label,
+        isFallback
       );
 
       if (result.success) {

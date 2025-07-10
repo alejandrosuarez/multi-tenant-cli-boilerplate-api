@@ -135,8 +135,6 @@ async uploadImage(fileBuffer, originalName, entityId, tenantId, userId, mimetype
       
       console.info(`[Upload-Success] size=original imageId=${imageId} file=${originalName}`);
       
-      try {
-
       // Get public URL for original
       const { data: originalUrlData } = this.supabase.storage
         .from(this.bucketName)
@@ -281,7 +279,7 @@ const optimized = await this.optimizeImage(fileBuffer, sizeName);
         });
       }
       return { success: false, error: error.message };
-
+    }
   }
 
   // Get images for an entity

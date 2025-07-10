@@ -1,3 +1,6 @@
+// FIXED VERSION OF ui/src/services/onesignal.js
+// This fixes the user association issues
+
 import OneSignal from 'react-onesignal';
 
 class OneSignalService {
@@ -84,51 +87,6 @@ class OneSignalService {
       console.error('❌ OneSignal initialization failed:', error);
       this.isInitialized = true;
     }
-    
-    // ORIGINAL CODE COMMENTED OUT FOR FUTURE REFERENCE
-    /*
-    const isProduction = import.meta.env.PROD;
-    const currentOrigin = window.location.origin;
-    const oneSignalAppId = import.meta.env.VITE_ONESIGNAL_APP_ID;
-    
-    if (!isProduction && currentOrigin.includes('localhost')) {
-      console.log('🔔 OneSignal disabled for localhost development environment');
-      this.isInitialized = true;
-      return;
-    }
-
-    if (!oneSignalAppId) {
-      console.warn('⚠️  OneSignal App ID not configured, skipping initialization');
-      this.isInitialized = true;
-      return;
-    }
-
-    try {
-      await OneSignal.init({
-        appId: oneSignalAppId,
-        safari_web_id: import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID,
-        notifyButton: { enable: true },
-        allowLocalhostAsSecureOrigin: true,
-        serviceWorkerPath: '/OneSignalSDKWorker.js',
-        serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
-        path: '/',
-        autoRegister: true,
-        autoResubscribe: true,
-      });
-
-      OneSignal.on('subscriptionChange', (isSubscribed) => {
-        if (isSubscribed) {
-          this.handleSubscriptionChange();
-        }
-      });
-
-      this.isInitialized = true;
-      console.log('✅ OneSignal initialized successfully');
-    } catch (error) {
-      console.error('❌ OneSignal initialization failed:', error);
-      this.isInitialized = true;
-    }
-    */
   }
 
   async handleSubscriptionChange() {
@@ -170,8 +128,11 @@ class OneSignalService {
     }
   }
 
+  // FIXED: Register device with proper field names
   async registerDevice(playerId) {
     try {
+      console.log('📱 Registering device with backend:', playerId);
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/subscribe-device`, {
         method: 'POST',
         headers: {
@@ -188,12 +149,15 @@ class OneSignalService {
       const data = await response.json();
       
       if (response.ok) {
-        console.log('Device registered successfully:', data);
+        console.log('✅ Device registered successfully:', data);
+        return data;
       } else {
-        console.error('Device registration failed:', data);
+        console.error('❌ Device registration failed:', data);
+        return null;
       }
     } catch (error) {
-      console.error('Error registering device:', error);
+      console.error('❌ Error registering device:', error);
+      return null;
     }
   }
 
@@ -347,7 +311,7 @@ class OneSignalService {
     
     try {
       console.log('\n🔍 OneSignal Debug Status:');
-      console.log('=' .repeat(50));
+      console.log('='.repeat(50));
       
       const isSubscribed = await OneSignal.isSubscribed();
       const playerId = await OneSignal.getPlayerId();
@@ -369,7 +333,7 @@ class OneSignalService {
         });
       }
       
-      console.log('=' .repeat(50));
+      console.log('='.repeat(50));
       
       return {
         isSubscribed,
@@ -410,6 +374,19 @@ class OneSignalService {
       return false;
     }
   }
+
+  // NEW: Manual method to test device association
+  async testDeviceAssociation(userId) {
+    console.log('🧪 Testing device association for user:', userId);
+    const playerId = await this.getPlayerId();
+    
+    if (!playerId) {
+      console.log('❌ No player ID available');
+      return false;
+    }
+    
+    return await this.associateDeviceWithUser(userId);
+  }
 }
 
 const oneSignalService = new OneSignalService();
@@ -424,8 +401,8 @@ if (typeof window !== 'undefined') {
     getPlayerId: () => oneSignalService.getPlayerId(),
     setExternalUserId: (id) => oneSignalService.setExternalUserId(id),
     setUserEmail: (email) => oneSignalService.setUserEmail(email),
-    testAssociation: (userId) => oneSignalService.associateDeviceWithUser(userId),
-    associateDevice: (userId) => oneSignalService.associateDeviceWithUser(userId)
+    testAssociation: (userId) => oneSignalService.testDeviceAssociation(userId), // NEW
+    associateDevice: (userId) => oneSignalService.associateDeviceWithUser(userId) // NEW
   };
   
   console.log('🔔 OneSignal Debug Tools Available:');
@@ -433,8 +410,7 @@ if (typeof window !== 'undefined') {
   console.log('- window.OneSignalDebug.forceSubscription()');
   console.log('- window.OneSignalDebug.checkSubscription()');
   console.log('- window.OneSignalDebug.getPlayerId()');
-  console.log('- window.OneSignalDebug.testAssociation("user123")');
-  console.log('- window.OneSignalDebug.associateDevice("user123")');
+  console.log('- window.OneSignalDebug.testAssociation("user123")'); // NEW
 }
 
 export default oneSignalService;
