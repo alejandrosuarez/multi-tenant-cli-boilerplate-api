@@ -49,6 +49,12 @@ class ImageService {
   // Optimize image for different sizes
   async optimizeImage(buffer, size = 'medium') {
     try {
+      if (!buffer || buffer.length === 0) {
+        throw new Error(`Invalid buffer: ${buffer ? 'empty buffer' : 'null/undefined buffer'}`);
+      }
+      
+      console.log(`🔧 Optimizing image for size: ${size}, buffer length: ${buffer.length}`);
+      
       const config = this.sizes[size] || this.sizes.medium;
       
       const optimized = await sharp(buffer)
@@ -59,9 +65,10 @@ class ImageService {
         .jpeg({ quality: config.quality, progressive: true })
         .toBuffer();
 
+      console.log(`✅ Image optimized for ${size}: ${optimized.length} bytes`);
       return { success: true, buffer: optimized };
     } catch (error) {
-      console.error('Image optimization error:', error);
+      console.error(`❌ Image optimization error for size ${size}:`, error.message);
       return { success: false, error: error.message };
     }
   }

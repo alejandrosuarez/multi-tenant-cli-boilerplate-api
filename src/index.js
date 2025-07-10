@@ -1,6 +1,7 @@
 const fastify = require('fastify')({ logger: true });
 const path = require('path');
 const fs = require('fs');
+const { pipeline } = require('stream/promises');
 
 // Register CORS support
 fastify.register(require('@fastify/cors'), {
@@ -503,9 +504,31 @@ fastify.post('/api/entities/:id/images', {
         continue; // Skip non-image files
       }
       
+      // Read file buffer using the file path from saved files
+      let fileBuffer;
+      try {
+        // Use Fastify's toBuffer method or filepath
+        if (file.filepath) {
+          fileBuffer = fs.readFileSync(file.filepath);
+        } else {
+          throw new Error('No filepath available to read file buffer');
+        }
+        
+        console.log(`📸 Read file ${file.filename} to buffer (${fileBuffer.length} bytes)`);
+
+        if (!fileBuffer || fileBuffer.length === 0) {
+          console.error('Empty buffer received for file:', file.filename);
+          continue;
+        }
+      } catch (bufferError) {
+        console.error('Buffer reading error:', bufferError);
+        continue; // Skip this file if buffer reading fails
+      }
+      
+      
       // Upload and optimize image
       const result = await imageService.uploadImage(
-        file.file,
+        fileBuffer,
         file.filename,
         entityId,
         tenantId,
@@ -515,6 +538,16 @@ fastify.post('/api/entities/:id/images', {
 
       if (result.success) {
         uploadResults.push(result.data);
+      }
+      
+      // Clean up temporary file
+      try {
+        if (file.filepath && fs.existsSync(file.filepath)) {
+          fs.unlinkSync(file.filepath);
+          console.log(`🧹 Cleaned up temporary file: ${file.filepath}`);
+        }
+      } catch (cleanupError) {
+        console.warn('Warning: Could not clean up temporary file:', cleanupError.message);
       }
     }
 
@@ -919,6 +952,113 @@ fastify.get('/api/debug/session-stats', async (request, reply) => {
     sessionDetails: auth.getSessionDetails(),
     timestamp: new Date().toISOString()
   };
+});
+
+// Debug endpoint for multipart file upload analysis
+fastify.post('/api/debug/upload-test', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  if (process.env.NODE_ENV === 'production') {
+    reply.status(404);
+    return { error: 'Not found' };
+  }
+
+  try {
+    console.log('🔍 DEBUG: Starting multipart analysis...');
+    
+    // Get uploaded files
+    const files = await request.saveRequestFiles();
+    console.log('🔍 DEBUG: Saved files:', files.length);
+    
+    const results = [];
+    
+    for (const [index, file] of files.entries()) {
+      console.log(`🔍 DEBUG: Processing file ${index + 1}:`);
+      console.log('  - fieldname:', file.fieldname);
+      console.log('  - filename:', file.filename);
+      console.log('  - encoding:', file.encoding);
+      console.log('  - mimetype:', file.mimetype);
+      console.log('  - filepath:', file.filepath);
+      console.log('  - file object type:', typeof file.file);
+      console.log('  - file object constructor:', file.file?.constructor?.name);
+      
+      let bufferInfo = {};
+      
+      // Method 1: Try toBuffer if it exists
+      if (typeof file.toBuffer === 'function') {
+        try {
+          const buffer1 = await file.toBuffer();
+          bufferInfo.toBuffer = { success: true, size: buffer1.length };
+          console.log('  ✅ toBuffer method successful:', buffer1.length, 'bytes');
+        } catch (error) {
+          bufferInfo.toBuffer = { success: false, error: error.message };
+          console.log('  ❌ toBuffer method failed:', error.message);
+        }
+      } else {
+        bufferInfo.toBuffer = { success: false, error: 'Method not available' };
+        console.log('  ⚠️  toBuffer method not available');
+      }
+      
+      // Method 2: Try reading from filepath
+      if (file.filepath) {
+        try {
+          const buffer2 = fs.readFileSync(file.filepath);
+          bufferInfo.filepath = { success: true, size: buffer2.length, path: file.filepath };
+          console.log('  ✅ filepath read successful:', buffer2.length, 'bytes from', file.filepath);
+        } catch (error) {
+          bufferInfo.filepath = { success: false, error: error.message };
+          console.log('  ❌ filepath read failed:', error.message);
+        }
+      } else {
+        bufferInfo.filepath = { success: false, error: 'No filepath available' };
+        console.log('  ⚠️  No filepath available');
+      }
+      
+      // Method 3: Check file stats if filepath exists
+      if (file.filepath) {
+        try {
+          const stats = fs.statSync(file.filepath);
+          bufferInfo.fileStats = {
+            size: stats.size,
+            isFile: stats.isFile(),
+            mtime: stats.mtime
+          };
+          console.log('  📊 File stats - size:', stats.size, 'bytes, isFile:', stats.isFile());
+        } catch (error) {
+          bufferInfo.fileStats = { error: error.message };
+          console.log('  ❌ File stats failed:', error.message);
+        }
+      }
+      
+      results.push({
+        index: index + 1,
+        fieldname: file.fieldname,
+        filename: file.filename,
+        encoding: file.encoding,
+        mimetype: file.mimetype,
+        filepath: file.filepath,
+        fileType: typeof file.file,
+        fileConstructor: file.file?.constructor?.name,
+        bufferMethods: bufferInfo
+      });
+    }
+    
+    return {
+      success: true,
+      totalFiles: files.length,
+      analysis: results,
+      timestamp: new Date().toISOString()
+    };
+    
+  } catch (error) {
+    console.error('🔍 DEBUG: Upload test failed:', error);
+    return {
+      success: false,
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    };
+  }
 });
 
 // Test email endpoint
