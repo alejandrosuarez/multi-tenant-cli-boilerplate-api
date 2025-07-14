@@ -6,45 +6,55 @@ This document outlines how all user behavior and system interactions are capture
 
 ## 🧱 Unified Log Model
 
-Table: `interaction_logs`
+Table: `mtcli_interactions` (accessed as `interactionLogs`)
 
-| Field         | Type     | Notes                                             |
-|---------------|----------|---------------------------------------------------|
-| `id`          | UUID     | Unique per log                                    |
-| `userId`      | UUID     | Clerk user or null (anonymous)                   |
-| `visitorToken`| Text     | If anonymous, used to identify sessions          |
-| `entityId`    | UUID     | Related entity                                   |
-| `eventType`   | Enum     | See below                                         |
-| `eventPayload`| JSONB    | Metadata (filters used, channel, attribute name) |
-| `tenantContext`| Text    | Tag for portal or subdomain                      |
-| `timestamp`   | DateTime | When event was recorded                          |
+| Field           | Type     | Notes                                             |
+|-----------------|----------|---------------------------------------------------|
+| `id`            | UUID     | Unique per log                                    |
+| `user_id`       | Text     | User ID or 'anonymous'                           |
+| `entity_id`     | UUID     | Related entity (optional)                        |
+| `event_type`    | Text     | Event type identifier                            |
+| `event_payload` | JSONB    | Metadata (filters used, channel, attribute name) |
+| `tenant_context`| Text     | Tag for tenant isolation                         |
+| `timestamp`     | DateTime | When event was recorded                          |
+
+**Note**: `visitorToken` is not currently implemented. Anonymous users are logged with `user_id: 'anonymous'`.
 
 ---
 
 ## 🧩 Event Types
 
+**Currently Implemented**:
+- `entity_created` → Entity created by user
+- `entity_viewed` → Entity accessed/viewed
+- `entity_updated` → Entity modified
+- `entity_deleted` → Entity soft-deleted
+- `otp_verification_success` → Successful OTP login
+- `user_logout` → User logged out
+- `attribute_info_requested` → Attribute information requested
+- `custom_event` → Manual interaction logging
+
+**Common Event Types** (can be logged via API):
 - `visit_main` → User loads main entity listing page
 - `visit_entity` → Direct visit to an entity by ID
-- `request_attribute` → Attribute request initiated
+- `entities_searched` → Search performed
 - `share_entity` → Entity URL copied or distributed
-- `contact_owner` → Click “Chat Owner” or similar action
-- `update_attribute` → Field filled after request
-- `subscribe_device` → Notification registration via push
-- `merge_device_user` → Visitor device paired with Clerk user
+- `contact_owner` → Click "Chat Owner" or similar action
 
 ---
 
 ## 💡 Example Log Entry
 
 {
-  "eventType": "visit_entity",
-  "entityId": "xyz456",
-  "userId": "clerk-id-123",
-  "tenantContext": "tenant_alpha",
-  "eventPayload": {
-    "source": "direct"
+  "event_type": "entity_viewed",
+  "entity_id": "xyz456",
+  "user_id": "user@example.com",
+  "tenant_context": "default",
+  "event_payload": {
+    "source": "direct",
+    "referrer": "search"
   },
-  "timestamp": "2025-07-04T12:33:00Z"
+  "timestamp": "2025-07-09T12:33:00Z"
 }
 
 ---
@@ -69,25 +79,85 @@ Entity owners can see:
 - Which attributes were requested on their entities
 - Who interacted with their items (if logged)
 - A history of updates and responses
+- View counts and interaction patterns
+
+**API Endpoints**:
+- `GET /api/entities/:id/logs` - Get logs for specific entity (owners only)
+- `GET /api/my/interactions` - Get user's own interaction history
 
 ---
 
-## 🔐 Access Control & RLS
+## 🔐 Access Control & Security
 
-- Supabase Row-Level Security ensures:
-  - Users only see their own logs (unless admin)
-  - Tenants can see logs scoped to their entities
+**Current Implementation**:
+- API-level access control (not RLS)
+- Users can view their own interaction history
+- Entity owners can view logs for their entities only
+- Tenant isolation via `tenant_context` field
 
-Logged users → view logs via:
+**API Endpoints**:
 
-GET /my/interactions  
-GET /entity/:id/logs
+### Get My Interactions
+GET /api/my/interactions?page=1&limit=50&event_type=entity_viewed  
+Authorization: Bearer {JWT}
+
+### Get Entity Logs (Owner Only)
+GET /api/entities/:id/logs?page=1&limit=50&event_type=entity_viewed  
+Authorization: Bearer {JWT}
+
+### Manual Log Interaction
+POST /api/interaction_logs  
+Authorization: Bearer {JWT} (optional)
+
+```json
+{
+  "eventType": "custom_event",
+  "entityId": "entity-uuid",
+  "eventPayload": {
+    "custom_data": "value",
+    "source": "manual"
+  }
+}
+```
 
 ---
 
 ## 🧙 Integration Notes
 
-- All APIs insert to `interaction_logs` automatically
-- Scheduled reports may use aggregation views
+- Key APIs automatically log interactions (entity creation, viewing, updates)
+- Manual logging available via `/api/interaction_logs` endpoint
+- Sentry integration for error tracking on failed log operations
+- Tenant isolation ensures data separation
 - Universal CLI can use these events to contextualize patterns
+
+---
+
+## 🚧 Current Implementation Status
+
+**Implemented Features**:
+- ✅ Unified interaction logging system
+- ✅ Automatic logging for key entity operations
+- ✅ Manual interaction logging API
+- ✅ User interaction history endpoint
+- ✅ Entity-specific logs for owners
+- ✅ Tenant isolation and access control
+- ✅ Pagination support for log queries
+- ✅ Event filtering by type
+- ✅ Sentry integration for error tracking
+
+**Database Integration**:
+- Table: `mtcli_interactions`
+- Service: `DatabaseService.logInteraction()`
+- Automatic logging in entity operations
+- Error handling and monitoring
+
+**Pending Features**:
+- ⏳ Visitor token support for anonymous session tracking
+- ⏳ Row Level Security (RLS) implementation
+- ⏳ Aggregation views for analytics
+- ⏳ Scheduled reporting system
+- ⏳ Advanced analytics dashboard
+- ⏳ Event-based notification triggers
+- ⏳ Bulk log operations
+- ⏳ Log retention policies
 

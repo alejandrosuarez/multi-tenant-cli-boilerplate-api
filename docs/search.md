@@ -6,16 +6,21 @@ This document defines how users and tenants can explore entities using category 
 
 ## 📁 Search API
 
-GET /entities/search
+GET /api/entities/search
 
-Supports query parameters:
+**Current Implementation** supports query parameters:
 
-- `category=vehicle`
-- `tenant=tenant_xyz`
-- `year[min]=2015`
-- `price[max]=30000`
-- `color=red`
-- `global=true` (optional for full access)
+- `category=vehicle` (entity type filtering)
+- `year[min]=2015` (range filtering)
+- `price[max]=30000` (range filtering)
+- `color=red` (exact match filtering)
+- `q=search term` (text search)
+- `sort_by=created_at` (sorting)
+- `sort_order=desc` (sort direction)
+- `include_images=true` (include image thumbnails)
+- `page=1&limit=20` (pagination)
+
+**Note**: Tenant context is automatically applied based on authentication.
 
 ---
 
@@ -33,12 +38,16 @@ Also supports:
 
 ## 📐 Range Filtering
 
-Examples:
+**Current Implementation** examples:
 
-GET /entities/search?price[min]=10000&price[max]=25000  
-GET /entities/search?year[min]=2020
+GET /api/entities/search?price[min]=10000&price[max]=25000  
+GET /api/entities/search?year[min]=2020  
+GET /api/entities/search?make=Toyota&year=2020&price[min]=15000
 
-Numeric, date, and timestamp fields support min/max constraints.
+**Supported Range Filters**:
+- Numeric fields: `price[min]`, `price[max]`, `year[min]`, `year[max]`
+- Combined with exact match filters
+- Automatic type detection and validation
 
 ---
 

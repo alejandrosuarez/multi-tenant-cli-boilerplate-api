@@ -40,20 +40,15 @@ Updates to base schema cascade via sync service or function.
 
 ### Request Flow
 
-POST /attribute-requests
+POST /api/request-attribute  
+Authorization: Bearer {JWT} (required)
 
-Visitor:
 {
   "entityId": "123",
-  "attribute": "price",
-  "visitorToken": "abc456"
+  "attribute": "price"
 }
 
-Logged User:
-{
-  "entityId": "123",
-  "attribute": "year"
-}
+**Note**: Only authenticated users can request attribute information. Anonymous requests are not currently supported.
 
 ---
 
@@ -61,28 +56,30 @@ Logged User:
 
 Displayed when:
 - Attribute is missing (null)
-- Attribute = `"NA"`
 - Attribute = empty string ("")
+
+**Note**: The system validates that the attribute exists in the entity schema and is actually empty before allowing requests.
 
 ---
 
 ## 📬 Owner Visibility
 
-GET /entity/:id/attribute-requests  
+GET /api/entities/:id/logs?event_type=attribute_info_requested  
 Authorization: Bearer {JWT}
 
 Returns:
-- List of requested fields
-- Requester ID or visitor token
+- List of interaction logs for attribute requests
+- Requester ID
 - Timestamp
+- Event payload with attribute details
 
-Used to prompt fulfillment or delay response as needed.
+**Note**: Attribute requests are logged as interactions and can be viewed through the entity logs endpoint. Only entity owners can view these logs.
 
 ---
 
 ## 🔔 Fulfillment Trigger
 
-PATCH /entities/:id  
+PATCH /api/entities/:id  
 Authorization: Bearer {JWT}
 
 Updating a previously requested field will:
@@ -94,10 +91,10 @@ Updating a previously requested field will:
 
 ## 🧠 Smart Filtering
 
-GET /entities/search?filter=category:vehicle&price[min]=10000
+GET /api/entities/search?category=vehicle&price[min]=10000
 
 - Filters based on active attribute values
-- `"NA"` fields are ignored
+- Empty and null fields are handled appropriately in search
 - Entities missing attribute can be queried separately if needed
 
 ---
@@ -117,4 +114,24 @@ You can query:
 - Works seamlessly with notifications, logs, and reminders
 - Attributes are decoupled from rigid schemas—flexible by design
 - Universal CLI can assist in generating dynamic filtering code or request logic
+
+---
+
+## 🚧 Current Implementation Status
+
+**Implemented Features:**
+- ✅ JSONB attribute storage in entities
+- ✅ Base schema from entity categories
+- ✅ Attribute request system (`POST /api/request-attribute`)
+- ✅ Email notifications to entity owners
+- ✅ Rate limiting for attribute requests
+- ✅ Validation of attribute existence and emptiness
+- ✅ Interaction logging for attribute requests
+- ✅ Advanced search with attribute filtering
+
+**Pending Features:**
+- ⏳ Push notifications for attribute fulfillment
+- ⏳ Dedicated attribute request tracking (currently uses interaction logs)
+- ⏳ "NA" status handling (currently only handles null and empty strings)
+- ⏳ Analytics dashboard for attribute request patterns
 

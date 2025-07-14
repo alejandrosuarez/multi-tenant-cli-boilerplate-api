@@ -31,21 +31,25 @@ Tenant-related fields:
 
 ### Global View
 
-GET /entities?global=true
+GET /api/entities
 
-Returns all public entities across all tenants.
+Returns all public entities across all tenants (default behavior).
 
 ---
 
 ### Tenant-Specific View
 
-GET /entities?tenant=tenant_xyz
+**Current Implementation**: Tenant context is automatically determined from user authentication.
 
-Returns entities scoped to `tenant_xyz`.
+GET /api/entities  
+Authorization: Bearer {JWT}
 
-GET /interaction_logs?tenant=tenant_xyz
+Returns entities scoped to the authenticated user's tenant context.
 
-Logs scoped to interactions originating from tenant portal.
+GET /api/my/interactions  
+Authorization: Bearer {JWT}
+
+Logs scoped to the authenticated user's tenant context.
 
 ---
 

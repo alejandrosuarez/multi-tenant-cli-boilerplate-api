@@ -7,7 +7,7 @@ This document outlines best practices for safe deployment, environment managemen
 ## 🔀 Git Flow & Branching
 
 - Use `main` for production
-- Use `dev` for active development
+- Use `staging` for pre-production testing
 - Create feature branches:
   - `feature/reminders-engine`
   - `fix/attribute-sync`
@@ -19,6 +19,13 @@ This document outlines best practices for safe deployment, environment managemen
 - Tag PRs with `@version` label if DB changes or API modifications occur
 - Each milestone in [`roadmap.md`] matches a release tag:
   - `v1-alpha`, `v1-beta`, `v2-staging`, etc.
+
+### GitHub Actions
+
+- Automated testing on push to `main` and `staging` branches
+- Unit tests run via `npm test`
+- Staging deployment tests (when accessible)
+- Image upload functionality testing
 
 ---
 
@@ -42,32 +49,38 @@ This keeps secrets, artifacts, and temporary files out of Git. Supabase migratio
 
 ## 🍪 Cookie-Based Routing Context
 
-To avoid multiple domains while testing new versions:
+**Note**: Cookie-based version routing is not currently implemented in the codebase.
 
+**Current Implementation**: 
+- Single deployment environment per branch
+- Environment determined by deployment target (Vercel)
+- Multi-tenant support via tenant context in requests
+
+**Future Enhancement**: Cookie-based routing could be implemented to:
 - Set `app_version_cookie=dev` for development view
 - UI and API use this cookie to determine context
 - If cookie is absent, default to `main` (production)
-
-Usage:
-
-- Devs and testers toggle versions via cookie
-- All served from the same domain (e.g., `platform.com`)
-- Reduces complexity across frontend and server infrastructure
 
 ---
 
 ## 🗃 Database Environment Strategy
 
-Use **a single Supabase instance** with multiple schemas:
+**Current Implementation**: Single Supabase instance with `public` schema.
 
+**Tables**:
+- `mtcli_entities` - Entity storage
+- `mtcli_entity_categories` - Entity type definitions
+- `mtcli_interactions` - Interaction logging
+- `mtcli_images` - Image metadata
+- `mtcli_push_subscriptions` - Push notification subscriptions
+
+**Multi-tenant Support**: Achieved via `tenant_id` field in entities and tenant context in API requests.
+
+**Future Enhancement**: Multiple schemas could be implemented:
 | Schema     | Purpose              | Notes                                   |
 |------------|----------------------|-----------------------------------------|
 | `public`   | Production data       | Used by live site                       |
-| `dev`      | Development testing   | RLS matches cookie context if needed    |
-
-Queries inspect cookie or user context to route between schemas.
-
-Optionally apply Postgres `search_path` dynamically.
+| `dev`      | Development testing   | RLS matches context if needed           |
 
 ---
 
@@ -76,84 +89,112 @@ Optionally apply Postgres `search_path` dynamically.
 All schema changes are stored inside:
 ```/www/src/db/migrations/```
 
+**Current Migration Files**:
+- `001-init.sql` - Initial database setup
+- `002-fix-relationships.sql` - Relationship fixes
+- `003-images.sql` - Image storage setup
+- `004-push-subscriptions.sql` - Push notification tables
+- `006_add_fallback_support.sql` - Fallback image support
 
-Each file named by purpose or phase:
+**Supabase Migrations**:
+- `supabase/migrations/20250709183057_remote_schema.sql` - Remote schema sync
 
-- `001-init.sql`
-- `002-add-reminders.sql`
-- `003-refactor-attributes.sql`
-
-Best practice:
-
-- Every file includes a header:
-```-- @version v1-alpha -- @description Adds reminder triggers and notification enums```
+**Best Practice**:
+- Every file includes a header with version and description
 - SQL files should be synced with Git tags and roadmap milestones
-- Supabase CLI or manual tooling can be used to apply migrations
+- Supabase CLI used for migration management
 
 ---
 
 ## 🧠 Sentry Tracking Integration
 
-Use Sentry across backend and frontend for full architecture observability.
+**Current Implementation**: Sentry is integrated in the backend.
 
 ### Backend Integration
 
-- Add Sentry SDK to Fastify/Node
-- Track API errors, exception traces, cron failures
-- Add metadata: `userId`, `tenantId`, `endpoint`, `version`
-- Group errors by `app_version_cookie`
+- ✅ Sentry SDK integrated in Fastify/Node (`src/index.js`)
+- ✅ Tracks API errors and exception traces
+- ✅ Initialized with DSN and environment configuration
 
-Env Vars:
-  - `SENTRY_DSN_BACKEND`
-  - `SENTRY_ENV`
+**Environment Variables**:
+```
+SENTRY_DSN_BACKEND=     # Backend Sentry DSN
+SENTRY_ENV=             # Environment (development/production)
+```
 
 ### Frontend Integration
 
-- Capture route-level errors
-- Track UI events: failed requests, auth failures, broken UIs
-- Use version-aware tags and user context
+**Status**: Not yet implemented for the React UI.
 
-Env Vars:
-- `NEXT_PUBLIC_SENTRY_DSN`
-- `NEXT_PUBLIC_VERSION_COOKIE_NAME=app_version_cookie`
-
-Sentry will log versioned paths like `/entity/:id?version=dev`
+**Future Enhancement**: Frontend Sentry integration could include:
+- Route-level error capture
+- UI event tracking: failed requests, auth failures
+- User context and tenant information
+- Version-aware error grouping
 
 ---
 
 ## 🧪 Local Development Setup
 
-Steps:
+**Current Steps**:
 
 1. Clone repo  
-2. Create `.env.local` using `setup.md` vars  
-3. Run: `npm run dev`  
-4. Set cookie: `app_version_cookie=dev`  
-5. Supabase CLI uses `dev` schema  
-6. Frontend loads dev version using cookie routing
+2. Create `.env.local` using `setup.md` variables  
+3. Run: `npm run dev` (starts backend on port 3000)
+4. Run: `cd ui && npm run dev` (starts frontend on port 5173)
+5. Backend serves API endpoints and static files
+6. Frontend connects to backend API
+
+**Scripts Available**:
+- `npm run dev` - Start development server
+- `npm start` - Start production server
+- `npm test` - Run Jest tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Run tests with coverage
 
 ---
 
 ## 📦 Production Deployment (Vercel)
 
-- Push to `main` triggers automatic Vercel deployment  
-- `.env.production` pulled from dashboard secrets  
-- Confirm presence of keys for:
-  - Clerk
-  - Supabase
-  - OneSignal
-  - Resend  
-- Health route: `GET /health`  
-- Edge configs for caching, throttling, version fallback
+**Current Setup**:
+- ✅ Vercel configuration in `vercel.json`
+- ✅ Node.js runtime with `@vercel/node`
+- ✅ All routes directed to `src/index.js`
+- ✅ Production environment variables set in Vercel dashboard
+
+**Required Environment Variables**:
+- Supabase: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- Authentication: `JWT_SECRET`, `CLERK_JWKS_URL` (optional)
+- Email: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`
+- Notifications: `ONESIGNAL_API_KEY`, `ONESIGNAL_APP_ID`
+- Monitoring: `SENTRY_DSN_BACKEND`, `SENTRY_ENV`
+
+**Health Check**: `GET /health` endpoint available for monitoring
+
+**Deployment Triggers**:
+- Push to `main` branch triggers production deployment
+- GitHub Actions run tests before deployment
 
 ---
 
-## 🔐 Supabase RLS Planning
+## 🔐 Supabase RLS & Security
 
-- All queries scoped by tenant using RLS  
-- Separation via schemas prevents accidental cross-env writes  
-- Roles can isolate development teams from production risks  
-- Logs tagged by `version`, `tenant`, and optionally `branch`
+**Current Implementation**:
+- ✅ Service role used for backend operations
+- ✅ Tenant isolation via `tenant_id` fields
+- ✅ Entity ownership validation in API layer
+- ✅ Authentication middleware for protected endpoints
+
+**Security Features**:
+- Entity access control (owners vs public entities)
+- Image upload restricted to entity owners
+- Attribute requests require authentication
+- Rate limiting on sensitive operations
+
+**Future RLS Enhancement**:
+- Row Level Security policies for additional database-level protection
+- Schema separation for environment isolation
+- Role-based access control for different user types
 
 ---
 
@@ -165,7 +206,29 @@ Be sure to update:
 - Update `docs/CLI_CONTEXT.md` with major architecture decisions
     - Deployment strategy  
     - Branching logic  
-    - Routing via cookies  
     - Schema separation rules  
     - SQL migration policy
 - Include deployment strategy, branching logic, and version tracking notes
+
+---
+
+## 🚧 Current Implementation Status
+
+**Implemented Features**:
+- ✅ Vercel deployment configuration
+- ✅ GitHub Actions CI/CD pipeline
+- ✅ Database migrations tracking
+- ✅ Environment variable management
+- ✅ Health check endpoint
+- ✅ Sentry error tracking (backend)
+- ✅ Multi-tenant architecture
+- ✅ Production-ready API structure
+
+**Pending Features**:
+- ⏳ Cookie-based version routing
+- ⏳ Multiple database schemas for environments
+- ⏳ Frontend Sentry integration
+- ⏳ Edge caching configuration
+- ⏳ Automated database migration deployment
+- ⏳ Staging environment setup
+- ⏳ Load testing and performance monitoring
