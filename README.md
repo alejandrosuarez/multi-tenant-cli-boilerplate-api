@@ -33,6 +33,12 @@ This project is a scalable, multi-tenant API system built to manage entities, at
 - Multi-tenant filtering and contextual visibility
 - Scheduled reminders for entity validity and user follow-ups
 
+## Image Service
+The image service uses the Sharp library for image optimization. If Sharp fails during image processing, the original image is uploaded without optimization as a fallback mechanism. This ensures that the image is still available even if optimization fails.
+
+### Fallback Mechanism
+When Sharp fails to process images, the service logs an error with `[Sharp-Fail]` and uses the original file as a fallback. These fallbacks are marked in the database, allowing for later reprocessing if Sharp becomes functional again.
+
 ## 🛠 Development Workflow
 
 ### Backend Development

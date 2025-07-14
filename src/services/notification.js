@@ -180,13 +180,17 @@ class NotificationService {
       }
 
       // 2. Get user's active push subscriptions
+      console.log(`🔍 Looking for subscriptions for userId: ${userId}, tenantContext: ${tenantContext}`);
       const subscriptionsResult = await this.getUserSubscriptions(userId, tenantContext);
       if (!subscriptionsResult.success) {
+        console.log(`❌ No subscriptions found for user ${userId}:`, subscriptionsResult.error);
         return { success: true, data: notificationData, pushSent: false, error: 'No subscriptions found' };
       }
 
       const subscriptions = subscriptionsResult.data;
+      console.log(`📋 Found ${subscriptions?.length || 0} subscriptions for user ${userId}:`, subscriptions);
       if (!subscriptions || subscriptions.length === 0) {
+        console.log(`❌ No active subscriptions for user ${userId}`);
         return { success: true, data: notificationData, pushSent: false, error: 'No active subscriptions' };
       }
 
@@ -392,6 +396,17 @@ class NotificationService {
     try {
       const offset = (page - 1) * limit;
 
+      // Get total count for proper pagination
+      const { count: totalCount, error: countError } = await this.db.table('mtcli_notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('tenant_context', tenantContext);
+
+      if (countError) {
+        return { success: false, error: countError.message };
+      }
+
+      // Get paginated data
       const { data, error } = await this.db.table('mtcli_notifications')
         .select('*')
         .eq('user_id', userId)
@@ -409,8 +424,8 @@ class NotificationService {
         pagination: {
           page,
           limit,
-          total: data.length,
-          has_more: data.length === limit
+          total: totalCount || 0,
+          has_more: (offset + data.length) < (totalCount || 0)
         }
       };
     } catch (error) {
