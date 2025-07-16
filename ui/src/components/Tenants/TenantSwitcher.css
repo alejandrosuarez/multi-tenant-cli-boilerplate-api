@@ -1,0 +1,323 @@
+.tenant-switcher {
+  position: relative;
+  display: inline-block;
+}
+
+.tenant-switcher-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 200px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tenant-switcher-trigger:hover {
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.tenant-switcher-trigger:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.current-tenant-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.tenant-icon {
+  font-size: 1.25rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 0.5rem;
+}
+
+.tenant-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+}
+
+.tenant-name {
+  font-weight: 600;
+  color: var(--text-primary, #1a202c);
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+.tenant-role {
+  font-size: 0.75rem;
+  color: var(--text-muted, #718096);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dropdown-arrow {
+  color: var(--text-muted, #718096);
+  transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.spinner-sm {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--border-color, #e2e8f0);
+  border-top: 2px solid var(--primary-color, #3b82f6);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Dropdown */
+.tenant-switcher-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.tenant-switcher-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  z-index: 1000;
+  min-width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.dropdown-header {
+  padding: 1rem 1rem 0.5rem 1rem;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.dropdown-header h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1a202c);
+}
+
+.dropdown-header p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted, #718096);
+}
+
+.tenant-options {
+  padding: 0.5rem;
+}
+
+.tenant-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.tenant-option:hover:not(:disabled) {
+  background: var(--bg-secondary, #f8fafc);
+}
+
+.tenant-option.current {
+  background: var(--primary-light, #eff6ff);
+  color: var(--primary-color, #3b82f6);
+}
+
+.tenant-option:disabled {
+  cursor: default;
+}
+
+.option-icon {
+  font-size: 1.125rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 0.375rem;
+  flex-shrink: 0;
+}
+
+.tenant-option.current .option-icon {
+  background: var(--primary-color, #3b82f6);
+  color: white;
+}
+
+.option-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.option-name {
+  font-weight: 500;
+  color: var(--text-primary, #1a202c);
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+.tenant-option.current .option-name {
+  color: var(--primary-color, #3b82f6);
+}
+
+.option-description {
+  font-size: 0.75rem;
+  color: var(--text-muted, #718096);
+  line-height: 1.3;
+}
+
+.current-indicator {
+  color: var(--primary-color, #3b82f6);
+  flex-shrink: 0;
+}
+
+.dropdown-footer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.admin-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted, #718096);
+  font-weight: 500;
+}
+
+.notice-icon {
+  font-size: 0.875rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tenant-switcher-trigger {
+    min-width: 150px;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .tenant-name {
+    font-size: 0.75rem;
+  }
+
+  .tenant-role {
+    font-size: 0.625rem;
+  }
+
+  .tenant-switcher-dropdown {
+    min-width: 250px;
+    left: auto;
+    right: 0;
+  }
+
+  .option-name {
+    font-size: 0.75rem;
+  }
+
+  .option-description {
+    font-size: 0.625rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tenant-switcher-trigger {
+    min-width: 120px;
+    padding: 0.5rem;
+  }
+
+  .current-tenant-info {
+    gap: 0.5rem;
+  }
+
+  .tenant-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 1rem;
+  }
+
+  .tenant-details {
+    gap: 0;
+  }
+
+  .tenant-switcher-dropdown {
+    min-width: 200px;
+    max-height: 300px;
+  }
+
+  .dropdown-header {
+    padding: 0.75rem;
+  }
+
+  .tenant-option {
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .option-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .tenant-switcher-trigger {
+    background: var(--bg-primary-dark, #1f2937);
+    border-color: var(--border-color-dark, #374151);
+  }
+
+  .tenant-switcher-dropdown {
+    background: var(--bg-primary-dark, #1f2937);
+    border-color: var(--border-color-dark, #374151);
+  }
+
+  .tenant-option:hover:not(:disabled) {
+    background: var(--bg-secondary-dark, #374151);
+  }
+
+  .dropdown-footer {
+    background: var(--bg-secondary-dark, #374151);
+  }
+}

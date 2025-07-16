@@ -1,0 +1,257 @@
+.chart-container {
+  background: #f0f0f3;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 
+    20px 20px 60px #bebebe,
+    -20px -20px 60px #ffffff;
+  margin: 20px 0;
+  position: relative;
+}
+
+.chart-container canvas {
+  border-radius: 10px;
+}
+
+.metric-card {
+  background: #f0f0f3;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 
+    15px 15px 30px #bebebe,
+    -15px -15px 30px #ffffff;
+  margin: 15px 0;
+  transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    20px 20px 40px #bebebe,
+    -20px -20px 40px #ffffff;
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.metric-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #f0f0f3;
+  box-shadow: 
+    inset 5px 5px 10px #bebebe,
+    inset -5px -5px 10px #ffffff;
+}
+
+.metric-title {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+
+.metric-change {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.change-indicator {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.chart-grid {
+  display: grid;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+/* Responsive chart containers */
+@media (max-width: 1200px) {
+  .chart-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 15px;
+  }
+  
+  .metric-card {
+    padding: 15px;
+    margin: 10px 0;
+  }
+  
+  .metric-value {
+    font-size: 24px;
+  }
+  
+  .metric-icon {
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
+  }
+  
+  .metric-title {
+    font-size: 12px;
+  }
+  
+  .chart-grid {
+    gap: 15px;
+    margin: 15px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-container {
+    padding: 12px;
+    margin: 12px 0;
+  }
+  
+  .metric-card {
+    padding: 12px;
+  }
+  
+  .metric-header {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .metric-value {
+    font-size: 20px;
+  }
+  
+  .metric-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+}
+
+/* Chart loading state */
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #666;
+  font-size: 14px;
+}
+
+.chart-loading::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f0f0f3;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+/* Chart error state */
+.chart-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #dc3545;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Custom tooltip styles */
+.chartjs-tooltip {
+  background: rgba(240, 240, 243, 0.95) !important;
+  border: 1px solid #bebebe !important;
+  border-radius: 10px !important;
+  box-shadow: 
+    5px 5px 15px rgba(190, 190, 190, 0.3),
+    -5px -5px 15px rgba(255, 255, 255, 0.3) !important;
+}
+
+.chartjs-tooltip-title {
+  color: #333 !important;
+  font-weight: 600 !important;
+}
+
+.chartjs-tooltip-body {
+  color: #333 !important;
+}
+
+/* Animation for metric cards */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.metric-card {
+  animation: slideInUp 0.5s ease-out;
+}
+
+/* Stagger animation for multiple cards */
+.metric-card:nth-child(1) { animation-delay: 0.1s; }
+.metric-card:nth-child(2) { animation-delay: 0.2s; }
+.metric-card:nth-child(3) { animation-delay: 0.3s; }
+.metric-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* Chart container variants */
+.chart-container.compact {
+  padding: 15px;
+  margin: 10px 0;
+}
+
+.chart-container.large {
+  padding: 30px;
+  margin: 30px 0;
+}
+
+.chart-container.no-shadow {
+  box-shadow: none;
+  border: 1px solid #e0e0e0;
+}
+
+/* Metric card variants */
+.metric-card.compact {
+  padding: 15px;
+}
+
+.metric-card.large {
+  padding: 25px;
+}
+
+.metric-card.highlighted {
+  background: linear-gradient(135deg, #f0f0f3 0%, #e8e8eb 100%);
+  border: 2px solid #007bff20;
+}

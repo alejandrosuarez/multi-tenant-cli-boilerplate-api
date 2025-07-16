@@ -1,43 +1,108 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNotifications } from '../../contexts/NotificationContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useTenant } from '../../contexts/TenantContext';
 import oneSignalService from '../../services/onesignal';
+import './NotificationSettings.css';
 
-const NotificationSettings = ({ user }) => {
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [playerId, setPlayerId] = useState(null);
+const NotificationSettings = () => {
+  const {
+    preferences,
+    updatePreferences,
+    requestNotificationPermission,
+    NOTIFICATION_TYPES
+  } = useNotifications();
+  
+  const { user } = useAuth();
+  
+  
+  const [localPreferences, setLocalPreferences] = useState(preferences);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [permissionState, setPermissionState] = useState('default');
-  const [loading, setLoading] = useState(false); // No loading since we're using native bell
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
-  // DISABLED: Let OneSignal native bell handle subscription
-  // useEffect(() => {
-  //   checkNotificationStatus();
-  // }, []);
+  useEffect(() => {
+    setLocalPreferences(preferences);
+    checkNotificationStatus();
+  }, [preferences]);
 
   const checkNotificationStatus = async () => {
     try {
       const subscribed = await oneSignalService.isSubscribed();
-      const playerIdValue = await oneSignalService.getPlayerId();
-      
       setIsSubscribed(subscribed);
-      setPlayerId(playerIdValue);
       setPermissionState(Notification.permission);
-      setLoading(false);
     } catch (error) {
       console.error('Error checking notification status:', error);
-      setLoading(false);
     }
   };
 
-  const handleEnableNotifications = async () => {
+  const handleGlobalToggle = (type, enabled) => {
+    setLocalPreferences(prev => ({
+      ...prev,
+      [type]: enabled
+    }));
+  };
+
+  const handleTypeToggle = (notificationType, channel, enabled) => {
+    setLocalPreferences(prev => ({
+      ...prev,
+      types: {
+        ...prev.types,
+        [notificationType]: {
+          ...prev.types[notificationType],
+          [channel]: enabled
+        }
+      }
+    }));
+  };
+
+  const handleQuietHoursChange = (field, value) => {
+    setLocalPreferences(prev => ({
+      ...prev,
+      quietHours: {
+        ...prev.quietHours,
+        [field]: value
+      }
+    }));
+  };
+
+  const savePreferences = async () => {
     try {
-      setLoading(true);
-      const permission = await oneSignalService.requestPermission();
-      if (permission) {
+      setSaving(true);
+      setError(null);
+      setSuccess(null);
+
+      const result = await updatePreferences(localPreferences);
+      
+      if (result.success) {
+        setSuccess('Notification preferences saved successfully!');
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        throw new Error(result.error || 'Failed to save preferences');
+      }
+    } catch (err) {
+      console.error('Error saving preferences:', err);
+      setError(err.message || 'Failed to save preferences');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const enablePushNotifications = async () => {
+    try {
+      const granted = await requestNotificationPermission();
+      if (granted) {
         await checkNotificationStatus();
+        setSuccess('Push notifications enabled successfully!');
+        setTimeout(() => setSuccess(null), 3000);
+      } else {
+        setError('Push notification permission denied');
       }
     } catch (error) {
-      console.error('Error enabling notifications:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error enabling push notifications:', error);
+      setError('Failed to enable push notifications');
     }
   };
 
@@ -62,140 +127,308 @@ const NotificationSettings = ({ user }) => {
       const data = await response.json();
       
       if (response.ok) {
-        alert('Test notification sent! Check your browser notifications.');
+        setSuccess('Test notification sent! Check your browser notifications.');
+        setTimeout(() => setSuccess(null), 3000);
       } else {
-        alert('Failed to send test notification: ' + data.message);
+        setError('Failed to send test notification: ' + data.message);
       }
     } catch (error) {
       console.error('Error sending test notification:', error);
-      alert('Error sending test notification');
+      setError('Error sending test notification');
     }
   };
 
-  if (loading) {
-    return (
-      <div className="notification-settings loading">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
-  }
+  const notificationTypeLabels = {
+    entity_created: 'Entity Created',
+    entity_updated: 'Entity Updated', 
+    entity_deleted: 'Entity Deleted',
+    attribute_request: 'Attribute Request',
+    attribute_response: 'Attribute Response',
+    interaction_received: 'Interaction Received',
+    system_alert: 'System Alert',
+    tenant_update: 'Tenant Update',
+    user_mention: 'User Mention',
+    bulk_operation_complete: 'Bulk Operation Complete'
+  };
+
+  const hasUnsavedChanges = JSON.stringify(localPreferences) !== JSON.stringify(preferences);
 
   return (
     <div className="notification-settings">
-      <h4>Push Notifications</h4>
-      
-      <div className="notification-native-info">
-        <div className="alert alert-info">
-          <i className="fas fa-bell"></i>
-          <strong>Native OneSignal Bell Active</strong>
-          <p>Push notifications are now handled by OneSignal's native bell widget. Look for the notification bell icon on your screen to subscribe and manage your notification preferences.</p>
+      <div className="settings-header">
+        <h2>
+          <i className="fas fa-cog"></i>
+          Notification Preferences
+        </h2>
+        <p>Customize how and when you receive notifications across different channels.</p>
+      </div>
+
+      {error && (
+        <div className="alert alert-danger">
+          <i className="fas fa-exclamation-triangle"></i>
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="alert alert-success">
+          <i className="fas fa-check-circle"></i>
+          {success}
+        </div>
+      )}
+
+      <div className="settings-content">
+        {/* Push Notification Status */}
+        <div className="settings-section">
+          <h3>Push Notification Status</h3>
+          <div className="status-card">
+            <div className="status-info">
+              <div className="status-icon">
+                <i className={`fas ${isSubscribed ? 'fa-bell' : 'fa-bell-slash'}`}></i>
+              </div>
+              <div className="status-details">
+                <h4>{isSubscribed ? 'Push Notifications Enabled' : 'Push Notifications Disabled'}</h4>
+                <p>
+                  {isSubscribed 
+                    ? 'You will receive push notifications on this device.'
+                    : 'Enable push notifications to receive real-time updates.'
+                  }
+                </p>
+                <span className={`status-badge ${permissionState}`}>
+                  {permissionState === 'granted' ? 'Granted' : 
+                   permissionState === 'denied' ? 'Denied' : 'Not Requested'}
+                </span>
+              </div>
+            </div>
+            {!isSubscribed && permissionState !== 'denied' && (
+              <button
+                className="btn btn-primary"
+                onClick={enablePushNotifications}
+              >
+                <i className="fas fa-bell"></i>
+                Enable Push Notifications
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Global Settings */}
+        <div className="settings-section">
+          <h3>Global Settings</h3>
+          <div className="setting-group">
+            <div className="setting-item">
+              <div className="setting-info">
+                <h4>Push Notifications</h4>
+                <p>Receive notifications as browser push notifications</p>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={localPreferences.enablePush}
+                  onChange={(e) => handleGlobalToggle('enablePush', e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div className="setting-item">
+              <div className="setting-info">
+                <h4>Email Notifications</h4>
+                <p>Receive notifications via email</p>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={localPreferences.enableEmail}
+                  onChange={(e) => handleGlobalToggle('enableEmail', e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div className="setting-item">
+              <div className="setting-info">
+                <h4>In-App Notifications</h4>
+                <p>Show notifications within the application</p>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={localPreferences.enableInApp}
+                  onChange={(e) => handleGlobalToggle('enableInApp', e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Quiet Hours */}
+        <div className="settings-section">
+          <h3>Quiet Hours</h3>
+          <div className="setting-group">
+            <div className="setting-item">
+              <div className="setting-info">
+                <h4>Enable Quiet Hours</h4>
+                <p>Suppress notifications during specified hours</p>
+              </div>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={localPreferences.quietHours.enabled}
+                  onChange={(e) => handleQuietHoursChange('enabled', e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+            </div>
+
+            {localPreferences.quietHours.enabled && (
+              <div className="quiet-hours-config">
+                <div className="time-inputs">
+                  <div className="time-input">
+                    <label>Start Time:</label>
+                    <input
+                      type="time"
+                      value={localPreferences.quietHours.start}
+                      onChange={(e) => handleQuietHoursChange('start', e.target.value)}
+                    />
+                  </div>
+                  <div className="time-input">
+                    <label>End Time:</label>
+                    <input
+                      type="time"
+                      value={localPreferences.quietHours.end}
+                      onChange={(e) => handleQuietHoursChange('end', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Notification Types */}
+        <div className="settings-section">
+          <h3>Notification Types</h3>
+          <p className="section-description">
+            Configure which types of notifications you want to receive through each channel.
+          </p>
+          
+          <div className="notification-types">
+            <div className="types-header">
+              <div className="type-name">Notification Type</div>
+              <div className="channel-headers">
+                <span>Push</span>
+                <span>Email</span>
+                <span>In-App</span>
+              </div>
+            </div>
+
+            {Object.values(NOTIFICATION_TYPES).map(type => (
+              <div key={type} className="notification-type-row">
+                <div className="type-info">
+                  <h4>{notificationTypeLabels[type] || type}</h4>
+                  <p>{getTypeDescription(type)}</p>
+                </div>
+                <div className="channel-toggles">
+                  <label className="toggle-switch small">
+                    <input
+                      type="checkbox"
+                      checked={localPreferences.types[type]?.push || false}
+                      onChange={(e) => handleTypeToggle(type, 'push', e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                  <label className="toggle-switch small">
+                    <input
+                      type="checkbox"
+                      checked={localPreferences.types[type]?.email || false}
+                      onChange={(e) => handleTypeToggle(type, 'email', e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                  <label className="toggle-switch small">
+                    <input
+                      type="checkbox"
+                      checked={localPreferences.types[type]?.inApp || false}
+                      onChange={(e) => handleTypeToggle(type, 'inApp', e.target.checked)}
+                    />
+                    <span className="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Test Notifications */}
+        <div className="settings-section">
+          <h3>Test Notifications</h3>
+          <div className="test-section">
+            <p>Send a test notification to verify your settings are working correctly.</p>
+            <button
+              className="btn btn-outline"
+              onClick={sendTestNotification}
+            >
+              <i className="fas fa-paper-plane"></i>
+              Send Test Notification
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="notification-actions mt-3">
-        <button 
-          className="btn btn-success me-2" 
-          onClick={sendTestNotification}
-          disabled={loading}
-        >
-          <i className="fas fa-paper-plane"></i> Send Test Notification
-        </button>
-        
-        <button 
-          className="btn btn-info me-2" 
-          onClick={async () => {
-            if (window.OneSignalDebug) {
-              await window.OneSignalDebug.debugStatus();
-            } else {
-              console.log('OneSignal Debug not available');
-            }
-          }}
-          disabled={loading}
-        >
-          <i className="fas fa-bug"></i> Debug Status
-        </button>
-        
-        <button 
-          className="btn btn-warning me-2" 
-          onClick={async () => {
-            if (window.OneSignalDebug) {
-              await window.OneSignalDebug.forceSubscription();
-            } else {
-              console.log('OneSignal Debug not available');
-            }
-          }}
-          disabled={loading}
-        >
-          <i className="fas fa-bell"></i> Force Subscribe
-        </button>
-        
-        <button 
-          className="btn btn-secondary" 
-          onClick={() => window.location.reload()}
-          disabled={loading}
-        >
-          <i className="fas fa-sync"></i> Refresh Page
-        </button>
-      </div>
-
-      <div className="notification-help mt-3">
-        <small className="text-muted">
-          <i className="fas fa-info-circle"></i> 
-          OneSignal's native bell provides a better user experience for managing push notification subscriptions.
-        </small>
-      </div>
-
-      <style jsx>{`
-        .notification-settings {
-          padding: 20px;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          background: white;
-          margin: 20px 0;
-        }
-        
-        .notification-status {
-          margin: 15px 0;
-        }
-        
-        .status-item {
-          margin: 10px 0;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        
-        .status-item strong {
-          min-width: 100px;
-        }
-        
-        .notification-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-        }
-        
-        .notification-help {
-          border-top: 1px solid #eee;
-          padding-top: 10px;
-        }
-        
-        .loading {
-          text-align: center;
-          padding: 40px;
-        }
-        
-        code {
-          font-size: 0.8em;
-          background: #f8f9fa;
-          padding: 2px 4px;
-          border-radius: 3px;
-        }
-      `}</style>
+      {/* Save Actions */}
+      {hasUnsavedChanges && (
+        <div className="save-actions">
+          <div className="unsaved-changes">
+            <i className="fas fa-exclamation-circle"></i>
+            You have unsaved changes
+          </div>
+          <div className="action-buttons">
+            <button
+              className="btn btn-outline"
+              onClick={() => setLocalPreferences(preferences)}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={savePreferences}
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-save"></i>
+                  Save Preferences
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
+
+  function getTypeDescription(type) {
+    const descriptions = {
+      entity_created: 'When new entities are created',
+      entity_updated: 'When entities are modified',
+      entity_deleted: 'When entities are removed',
+      attribute_request: 'When someone requests attribute information',
+      attribute_response: 'When attribute requests are answered',
+      interaction_received: 'When you receive interactions on your entities',
+      system_alert: 'Important system announcements and alerts',
+      tenant_update: 'Updates related to your tenant or organization',
+      user_mention: 'When you are mentioned in comments or discussions',
+      bulk_operation_complete: 'When bulk operations finish processing'
+    };
+    return descriptions[type] || 'Notification type';
+  }
 };
 
 export default NotificationSettings;

@@ -1,0 +1,263 @@
+/* PWA Install Prompt Styles */
+.pwa-install-prompt {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 400px;
+  margin: 0 auto;
+  animation: slideInUp 0.3s ease-out;
+}
+
+.pwa-prompt-content {
+  background: #e0e5ec;
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 
+    20px 20px 40px #c2c8d0,
+    -20px -20px 40px #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.pwa-prompt-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pwa-prompt-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #0d6efd 0%, #0856d3 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  box-shadow: 
+    8px 8px 16px #c2c8d0,
+    -8px -8px 16px #ffffff;
+}
+
+.pwa-prompt-text {
+  flex: 1;
+}
+
+.pwa-prompt-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 0.25rem 0;
+}
+
+.pwa-prompt-subtitle {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.pwa-prompt-features {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.pwa-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #495057;
+  background: rgba(255, 255, 255, 0.4);
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px;
+  box-shadow: 
+    inset 2px 2px 4px #c2c8d0,
+    inset -2px -2px 4px #ffffff;
+}
+
+.pwa-feature i {
+  color: #0d6efd;
+  font-size: 0.9rem;
+}
+
+.pwa-prompt-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.pwa-prompt-actions .touch-button:first-child {
+  flex: 1;
+}
+
+/* PWA Status (when installed) */
+.pwa-status {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  animation: slideInDown 0.3s ease-out;
+}
+
+.pwa-status.installed {
+  background: rgba(25, 135, 84, 0.1);
+  border: 1px solid rgba(25, 135, 84, 0.3);
+}
+
+.pwa-status-content {
+  background: #e0e5ec;
+  border-radius: 25px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 
+    8px 8px 16px #c2c8d0,
+    -8px -8px 16px #ffffff;
+  backdrop-filter: blur(10px);
+}
+
+.pwa-status-icon {
+  color: #198754;
+  font-size: 1rem;
+}
+
+.pwa-status-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.offline-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid #dee2e6;
+  color: #dc3545;
+  font-size: 0.8rem;
+}
+
+.offline-indicator i {
+  font-size: 0.75rem;
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .pwa-install-prompt {
+    bottom: 80px; /* Above mobile navigation */
+    left: 10px;
+    right: 10px;
+  }
+  
+  .pwa-prompt-content {
+    padding: 1rem;
+  }
+  
+  .pwa-prompt-header {
+    gap: 0.75rem;
+  }
+  
+  .pwa-prompt-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+  
+  .pwa-prompt-title {
+    font-size: 1rem;
+  }
+  
+  .pwa-prompt-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .pwa-prompt-features {
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .pwa-feature {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.6rem;
+  }
+  
+  .pwa-prompt-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .pwa-prompt-actions .touch-button {
+    width: 100%;
+  }
+  
+  .pwa-status {
+    top: 10px;
+    right: 10px;
+  }
+  
+  .pwa-status-content {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .pwa-status-text {
+    font-size: 0.8rem;
+  }
+}
+
+/* Animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .pwa-install-prompt {
+    max-width: 350px;
+    bottom: 30px;
+    left: 30px;
+    right: 30px;
+  }
+}
+
+/* Desktop adjustments */
+@media (min-width: 1024px) {
+  .pwa-install-prompt {
+    max-width: 380px;
+    bottom: 40px;
+    left: 40px;
+    right: auto;
+  }
+  
+  .pwa-status {
+    top: 30px;
+    right: 30px;
+  }
+}

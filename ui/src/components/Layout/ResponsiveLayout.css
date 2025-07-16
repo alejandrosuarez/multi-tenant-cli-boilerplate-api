@@ -1,0 +1,45 @@
+/* Responsive Layout Styles */
+.responsive-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.main-content.mobile-nav-padding {
+  padding-bottom: 80px;
+}
+
+/* Mobile-specific adjustments */
+.responsive-layout.mobile .main-content {
+  padding: 0.5rem;
+}
+
+.responsive-layout.mobile .container {
+  padding: 0 0.5rem;
+}
+
+/* Tablet-specific adjustments */
+.responsive-layout.tablet .main-content {
+  padding: 1rem;
+}
+
+.responsive-layout.tablet .container {
+  padding: 0 1rem;
+}
+
+/* Desktop adjustments */
+@media (min-width: 1024px) {
+  .main-content {
+    padding: 2rem;
+  }
+  
+  .container {
+    padding: 0 2rem;
+  }
+}

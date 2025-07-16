@@ -1,0 +1,60 @@
+{
+  "metrics": {
+    "entities": {
+      "total": 150,
+      "created_today": 5,
+      "updated_today": 12,
+      "by_type": {
+        "product": 80,
+        "service": 45,
+        "event": 25
+      }
+    },
+    "interactions": {
+      "total": 1250,
+      "today": 45,
+      "by_type": {
+        "view": 800,
+        "like": 300,
+        "share": 150
+      }
+    },
+    "requests": {
+      "pending": 8,
+      "fulfilled_today": 15,
+      "response_time_avg": 2.5
+    },
+    "notifications": {
+      "sent_today": 25,
+      "delivered": 23,
+      "opened": 18,
+      "clicked": 12
+    }
+  },
+  "trends": [
+    {
+      "date": "2024-01-01",
+      "entities_created": 3,
+      "interactions": 45,
+      "notifications_sent": 12
+    },
+    {
+      "date": "2024-01-02",
+      "entities_created": 5,
+      "interactions": 52,
+      "notifications_sent": 18
+    },
+    {
+      "date": "2024-01-03",
+      "entities_created": 2,
+      "interactions": 38,
+      "notifications_sent": 8
+    }
+  ],
+  "performance": {
+    "api_response_time": 150,
+    "database_queries": 1250,
+    "cache_hit_rate": 0.85,
+    "error_rate": 0.02
+  }
+}

@@ -1,0 +1,122 @@
+.virtual-scroll-container {
+  position: relative;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb, #c1c1c1) var(--scrollbar-track, #f1f1f1);
+}
+
+.virtual-scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.virtual-scroll-container::-webkit-scrollbar-track {
+  background: var(--scrollbar-track, #f1f1f1);
+  border-radius: 4px;
+}
+
+.virtual-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #c1c1c1);
+  border-radius: 4px;
+}
+
+.virtual-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, #a8a8a8);
+}
+
+.virtual-scroll-content {
+  position: relative;
+}
+
+.virtual-scroll-item {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-color, #e9ecef);
+  background: var(--surface-color, #ffffff);
+  transition: background-color 0.2s ease;
+}
+
+.virtual-scroll-item:hover {
+  background: var(--hover-color, #f8f9fa);
+}
+
+.virtual-scroll-item:last-child {
+  border-bottom: none;
+}
+
+/* Loading state */
+.virtual-scroll-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted, #6c757d);
+}
+
+.virtual-scroll-loading .loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border-color, #dee2e6);
+  border-top: 2px solid var(--primary-color, #007bff);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 12px;
+}
+
+/* Empty state */
+.virtual-scroll-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted, #6c757d);
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.virtual-scroll-empty i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.virtual-scroll-empty h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.virtual-scroll-empty p {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .virtual-scroll-item {
+    padding: 0 12px;
+  }
+  
+  .virtual-scroll-empty {
+    padding: 30px 15px;
+  }
+  
+  .virtual-scroll-empty i {
+    font-size: 36px;
+  }
+  
+  .virtual-scroll-empty h3 {
+    font-size: 16px;
+  }
+  
+  .virtual-scroll-empty p {
+    font-size: 13px;
+  }
+}

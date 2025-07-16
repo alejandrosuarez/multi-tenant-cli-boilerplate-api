@@ -1,0 +1,93 @@
+/* Swipeable Card Styles */
+.swipeable-card {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+  transition: transform 0.3s ease;
+  background: #e0e5ec;
+  border-radius: 16px;
+  box-shadow: 
+    8px 8px 16px #c2c8d0,
+    -8px -8px 16px #ffffff;
+}
+
+.swipeable-card__content {
+  position: relative;
+  z-index: 2;
+  background: inherit;
+  transition: transform 0.3s ease;
+  border-radius: inherit;
+}
+
+.swipe-action {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.swipe-action--left {
+  left: 0;
+  background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+  border-radius: 16px 0 0 16px;
+}
+
+.swipe-action--right {
+  right: 0;
+  background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+  border-radius: 0 16px 16px 0;
+}
+
+/* Swipe states */
+.swipeable-card.swiped-left .swipeable-card__content {
+  transform: translateX(-80px);
+}
+
+.swipeable-card.swiped-right .swipeable-card__content {
+  transform: translateX(80px);
+}
+
+.swipeable-card.swiped-left .swipe-action--left {
+  opacity: 1;
+}
+
+.swipeable-card.swiped-right .swipe-action--right {
+  opacity: 1;
+}
+
+/* Hover effects for desktop */
+@media (min-width: 768px) {
+  .swipeable-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      12px 12px 24px #c2c8d0,
+      -12px -12px 24px #ffffff;
+  }
+}
+
+/* Mobile-specific touch optimizations */
+@media (max-width: 767px) {
+  .swipeable-card {
+    margin-bottom: 0.5rem;
+  }
+  
+  .swipe-action {
+    width: 100px;
+    font-size: 0.875rem;
+  }
+  
+  .swipeable-card.swiped-left .swipeable-card__content {
+    transform: translateX(-100px);
+  }
+  
+  .swipeable-card.swiped-right .swipeable-card__content {
+    transform: translateX(100px);
+  }
+}

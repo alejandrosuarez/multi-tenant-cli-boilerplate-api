@@ -1,0 +1,311 @@
+name: Deploy Comprehensive Frontend Management System
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'ui/**'
+      - '.github/workflows/deploy.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'ui/**'
+
+env:
+  NODE_VERSION: '18'
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  # Code Quality and Testing
+  quality-check:
+    name: Code Quality & Testing
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./ui
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run ESLint
+        run: npm run lint
+        
+      - name: Run unit tests
+        run: npm run test:unit -- --run --coverage
+        
+      - name: Run integration tests
+        run: npm run test:integration -- --run
+        
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./ui/coverage
+          flags: frontend
+          name: frontend-coverage
+          
+      - name: Build application
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
+          VITE_ONESIGNAL_APP_ID: ${{ secrets.VITE_ONESIGNAL_APP_ID }}
+          
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-files
+          path: ui/dist/
+          retention-days: 1
+
+  # Accessibility Testing
+  accessibility-test:
+    name: Accessibility Testing
+    runs-on: ubuntu-latest
+    needs: quality-check
+    defaults:
+      run:
+        working-directory: ./ui
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-files
+          path: ui/dist/
+          
+      - name: Run accessibility tests
+        run: npm run test:accessibility
+        
+      - name: Upload accessibility report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: accessibility-report
+          path: ui/cypress/reports/accessibility/
+
+  # End-to-End Testing
+  e2e-test:
+    name: End-to-End Testing
+    runs-on: ubuntu-latest
+    needs: quality-check
+    defaults:
+      run:
+        working-directory: ./ui
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-files
+          path: ui/dist/
+          
+      - name: Start preview server
+        run: npm run preview &
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
+          
+      - name: Wait for server
+        run: npx wait-on http://localhost:4173
+        
+      - name: Run Cypress E2E tests
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: ui
+          browser: chrome
+          headless: true
+          
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: e2e-test-results
+          path: |
+            ui/cypress/screenshots/
+            ui/cypress/videos/
+
+  # Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [quality-check, accessibility-test, e2e-test]
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.preview-url }}
+    defaults:
+      run:
+        working-directory: ./ui
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+        
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        
+      - name: Build Project Artifacts
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }}
+          VITE_ONESIGNAL_APP_ID: ${{ secrets.VITE_ONESIGNAL_APP_ID }}
+          VITE_NODE_ENV: staging
+          
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview-url=$url" >> $GITHUB_OUTPUT
+          
+      - name: Comment PR with staging URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Staging deployment ready!**\n\n📱 Preview URL: ${{ steps.deploy.outputs.preview-url }}\n\n✅ All tests passed and the application is ready for review.`
+            })
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [quality-check, accessibility-test, e2e-test]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://your-production-domain.com
+    defaults:
+      run:
+        working-directory: ./ui
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+        
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL_PRODUCTION }}
+          VITE_ONESIGNAL_APP_ID: ${{ secrets.VITE_ONESIGNAL_APP_ID_PRODUCTION }}
+          VITE_NODE_ENV: production
+          
+      - name: Deploy to Vercel Production
+        id: deploy
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        
+      - name: Run post-deployment smoke tests
+        run: |
+          sleep 30
+          npm run test:smoke -- --baseUrl=https://your-production-domain.com
+          
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🎉 Production deployment successful!"
+          echo "🌐 Live at: https://your-production-domain.com"
+
+  # Performance Testing
+  performance-test:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+        
+      - name: Run Lighthouse CI
+        run: lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
+          LHCI_BUILD_CONTEXT__COMMIT_TIME: ${{ github.event.head_commit.timestamp }}
+          
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: lighthouse-results
+          path: .lighthouseci/

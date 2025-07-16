@@ -1,72 +1,120 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Navbar, Nav, Container, Button } from 'react-bootstrap';
+import TouchButton from '../UI/TouchButton';
 import './PublicLayout.css';
 
 const PublicLayout = () => {
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
 
   return (
     <div className="public-layout">
-      <Navbar bg="light" expand="lg" className="public-navbar neumorphic-card mb-0">
-        <Container>
-          <Navbar.Brand as={Link} to="/" className="brand-link">
-            <i className="fas fa-cube me-2" style={{ color: '#0d6efd' }}></i>
-            <span className="brand-text">Multi-Tenant CLI</span>
-          </Navbar.Brand>
-          
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-              <Nav.Link 
-                as={Link} 
-                to="/" 
-                className={location.pathname === '/' ? 'active' : ''}
-              >
-                <i className="fas fa-home me-1"></i>
-                Home
-              </Nav.Link>
-              <Nav.Link 
-                as={Link} 
-                to="/listing" 
-                className={location.pathname === '/listing' ? 'active' : ''}
-              >
-                <i className="fas fa-list me-1"></i>
-                All Listings
-              </Nav.Link>
-            </Nav>
+      {/* Navigation Header */}
+      <header className="public-header">
+        <nav className="public-navbar">
+          <div className="container">
+            <div className="navbar-content">
+              {/* Brand */}
+              <Link to="/" className="brand-link">
+                <i className="fas fa-cube"></i>
+                <span className="brand-text">Entity Management</span>
+              </Link>
+              
+              {/* Desktop Navigation */}
+              <div className="nav-links desktop-nav">
+                <Link 
+                  to="/" 
+                  className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
+                >
+                  <i className="fas fa-home"></i>
+                  <span>Home</span>
+                </Link>
+                <Link 
+                  to="/listing" 
+                  className={`nav-link ${location.pathname === '/listing' ? 'active' : ''}`}
+                >
+                  <i className="fas fa-list"></i>
+                  <span>All Listings</span>
+                </Link>
+              </div>
+              
+              {/* Desktop Login Button */}
+              <div className="nav-actions desktop-nav">
+                <Link to="/auth">
+                  <TouchButton
+                    variant="primary"
+                    icon="fas fa-sign-in-alt"
+                  >
+                    Admin Login
+                  </TouchButton>
+                </Link>
+              </div>
+              
+              {/* Mobile Menu Toggle */}
+              <TouchButton
+                onClick={toggleMobileMenu}
+                variant="secondary"
+                size="small"
+                icon={mobileMenuOpen ? "fas fa-times" : "fas fa-bars"}
+                className="mobile-menu-toggle"
+              />
+            </div>
             
-            <Nav>
-              <Button
-                as={Link}
-                to="/auth"
-                variant="outline-primary"
-                className="login-btn"
-              >
-                <i className="fas fa-sign-in-alt me-1"></i>
-                Admin Login
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+            {/* Mobile Navigation Menu */}
+            <div className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
+              <div className="mobile-nav-content">
+                <Link 
+                  to="/" 
+                  className={`mobile-nav-link ${location.pathname === '/' ? 'active' : ''}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <i className="fas fa-home"></i>
+                  <span>Home</span>
+                </Link>
+                <Link 
+                  to="/listing" 
+                  className={`mobile-nav-link ${location.pathname === '/listing' ? 'active' : ''}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <i className="fas fa-list"></i>
+                  <span>All Listings</span>
+                </Link>
+                <Link 
+                  to="/auth" 
+                  className="mobile-nav-link"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <i className="fas fa-sign-in-alt"></i>
+                  <span>Admin Login</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </nav>
+      </header>
 
+      {/* Main Content */}
       <main className="public-main">
         <Outlet />
       </main>
 
+      {/* Footer */}
       <footer className="public-footer">
-        <Container>
+        <div className="container">
           <div className="footer-content">
             <div className="footer-section">
-              <h6>Multi-Tenant CLI</h6>
-              <p className="text-muted small">
-                A modern multi-tenant boilerplate with React and Node.js
+              <h3 className="footer-title">Entity Management</h3>
+              <p className="footer-description">
+                A modern multi-tenant platform with React and Node.js
               </p>
             </div>
             
             <div className="footer-section">
-              <h6>Quick Links</h6>
+              <h4 className="footer-subtitle">Quick Links</h4>
               <div className="footer-links">
                 <Link to="/" className="footer-link">Home</Link>
                 <Link to="/listing" className="footer-link">All Listings</Link>
@@ -75,15 +123,15 @@ const PublicLayout = () => {
             </div>
             
             <div className="footer-section">
-              <h6>Connect</h6>
+              <h4 className="footer-subtitle">Connect</h4>
               <div className="social-links">
-                <a href="#" className="social-link" title="GitHub">
+                <a href="#" className="social-link" title="GitHub" aria-label="GitHub">
                   <i className="fab fa-github"></i>
                 </a>
-                <a href="#" className="social-link" title="Twitter">
+                <a href="#" className="social-link" title="Twitter" aria-label="Twitter">
                   <i className="fab fa-twitter"></i>
                 </a>
-                <a href="#" className="social-link" title="LinkedIn">
+                <a href="#" className="social-link" title="LinkedIn" aria-label="LinkedIn">
                   <i className="fab fa-linkedin"></i>
                 </a>
               </div>
@@ -91,11 +139,9 @@ const PublicLayout = () => {
           </div>
           
           <div className="footer-bottom">
-            <p className="text-center text-muted small mb-0">
-              © 2024 Multi-Tenant CLI. Built with React + Node.js
-            </p>
+            <p>© 2024 Entity Management System. Built with React + Node.js</p>
           </div>
-        </Container>
+        </div>
       </footer>
     </div>
   );

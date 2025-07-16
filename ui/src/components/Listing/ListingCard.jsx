@@ -1,10 +1,12 @@
-import React from 'react';
-import { Card, Button, Carousel, Badge } from 'react-bootstrap';
+import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import TouchButton from '../UI/TouchButton';
+import SwipeableCard from '../UI/SwipeableCard';
 import './ListingCard.css';
 
 const ListingCard = ({ entity }) => {
   const { tenantId } = useParams();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const hasImages = entity.images && entity.images.length > 0;
 
   // Generate the correct link path based on whether we're in a tenant context
@@ -15,28 +17,81 @@ const ListingCard = ({ entity }) => {
     return `/entity/${entity.id}`;
   };
 
+  const nextImage = () => {
+    if (hasImages && entity.images.length > 1) {
+      setCurrentImageIndex((prev) => (prev + 1) % entity.images.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (hasImages && entity.images.length > 1) {
+      setCurrentImageIndex((prev) => (prev - 1 + entity.images.length) % entity.images.length);
+    }
+  };
+
+  const handleSwipeLeft = () => {
+    nextImage();
+  };
+
+  const handleSwipeRight = () => {
+    prevImage();
+  };
+
   return (
-    <div className="listing-card neumorphic-card">
+    <SwipeableCard
+      className="listing-card"
+      onSwipeLeft={hasImages && entity.images.length > 1 ? handleSwipeLeft : null}
+      onSwipeRight={hasImages && entity.images.length > 1 ? handleSwipeRight : null}
+    >
       {/* Image Section */}
       <div className="card-image-section">
         {hasImages ? (
-          <Carousel interval={null} indicators={false} controls={entity.images.length > 1} className="card-carousel">
-            {entity.images.map((image, idx) => (
-              <Carousel.Item key={idx}>
-                <div className="image-container">
-                  <img 
-                    src={image.url}
-                    alt={entity.attributes.name || 'Entity Image'}
-                    className="card-image"
+          <div className="image-carousel">
+            <div className="image-container">
+              <img 
+                src={entity.images[currentImageIndex].url}
+                alt={entity.attributes?.name || 'Entity Image'}
+                className="card-image"
+                loading="lazy"
+              />
+              
+              {/* Image Navigation */}
+              {entity.images.length > 1 && (
+                <>
+                  <TouchButton
+                    onClick={prevImage}
+                    className="image-nav-btn image-nav-prev"
+                    variant="ghost"
+                    size="small"
+                    icon="fas fa-chevron-left"
                   />
-                </div>
-              </Carousel.Item>
-            ))}
-          </Carousel>
+                  <TouchButton
+                    onClick={nextImage}
+                    className="image-nav-btn image-nav-next"
+                    variant="ghost"
+                    size="small"
+                    icon="fas fa-chevron-right"
+                  />
+                  
+                  {/* Image Indicators */}
+                  <div className="image-indicators">
+                    {entity.images.map((_, idx) => (
+                      <button
+                        key={idx}
+                        className={`image-indicator ${idx === currentImageIndex ? 'active' : ''}`}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        aria-label={`View image ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         ) : (
           <div className="no-image-placeholder">
-            <i className="fas fa-image fa-2x text-muted"></i>
-            <span className="text-muted">No Image</span>
+            <i className="fas fa-image"></i>
+            <span>No Image</span>
           </div>
         )}
       </div>
@@ -44,48 +99,51 @@ const ListingCard = ({ entity }) => {
       {/* Content Section */}
       <div className="card-content">
         <div className="card-header-section">
-          <h5 className="card-title">{entity.attributes.name || 'Unnamed Entity'}</h5>
+          <h3 className="card-title">{entity.attributes?.name || 'Unnamed Entity'}</h3>
           <div className="card-type">
-            <Badge bg="info" className="type-badge">
-              <i className="fas fa-tag me-1"></i>
+            <span className="type-badge">
+              <i className="fas fa-tag"></i>
               {entity.entity_type || 'N/A'}
-            </Badge>
+            </span>
           </div>
         </div>
         
         <p className="card-description">
-          {entity.attributes.description || 'No description provided.'}
+          {entity.attributes?.description || 'No description provided.'}
         </p>
 
         {/* Attributes Preview */}
-        <div className="attributes-preview">
-          <h6 className="attributes-title">Key Attributes:</h6>
-          <div className="attributes-list">
-            {Object.entries(entity.attributes || {})
-              .filter(([key]) => key !== 'name' && key !== 'description')
-              .slice(0, 3)
-              .map(([key, value]) => (
-                <div key={key} className="attribute-item">
-                  <span className="attribute-key">{key}:</span>
-                  <span className="attribute-value">{String(value)}</span>
-                </div>
-              ))}
+        {entity.attributes && Object.keys(entity.attributes).length > 2 && (
+          <div className="attributes-preview">
+            <h4 className="attributes-title">Key Details</h4>
+            <div className="attributes-list">
+              {Object.entries(entity.attributes)
+                .filter(([key]) => key !== 'name' && key !== 'description')
+                .slice(0, 3)
+                .map(([key, value]) => (
+                  <div key={key} className="attribute-item">
+                    <span className="attribute-key">{key.replace(/_/g, ' ')}</span>
+                    <span className="attribute-value">{String(value)}</span>
+                  </div>
+                ))}
+            </div>
           </div>
-        </div>
+        )}
         
         {/* Action Button */}
         <div className="card-actions">
-          <Button 
-            as={Link} 
-            to={getEntityLink()} 
-            className="view-details-btn neumorphic-button"
-          >
-            <i className="fas fa-eye me-2"></i>
-            View Details
-          </Button>
+          <Link to={getEntityLink()} className="view-details-btn-link">
+            <TouchButton 
+              variant="primary"
+              icon="fas fa-eye"
+              className="view-details-btn"
+            >
+              View Details
+            </TouchButton>
+          </Link>
         </div>
       </div>
-    </div>
+    </SwipeableCard>
   );
 };
 

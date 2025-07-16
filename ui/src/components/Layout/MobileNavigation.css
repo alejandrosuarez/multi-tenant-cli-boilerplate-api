@@ -1,0 +1,80 @@
+/* Mobile Navigation Styles */
+.mobile-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #e0e5ec;
+  border-top: 1px solid #c2c8d0;
+  padding: 0.5rem;
+  z-index: 1000;
+  box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.mobile-nav-items {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  min-width: 60px;
+  background: none;
+  border: none;
+  color: #6c757d;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: 12px;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.mobile-nav-item:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.mobile-nav-item.active {
+  color: #0d6efd;
+  background: rgba(13, 110, 253, 0.1);
+  box-shadow: 
+    inset 3px 3px 6px #c2c8d0,
+    inset -3px -3px 6px #ffffff;
+}
+
+.mobile-nav-item i {
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
+  transition: transform 0.2s ease;
+}
+
+.mobile-nav-item:hover i {
+  transform: scale(1.1);
+}
+
+.mobile-nav-item span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Hide mobile nav on desktop */
+@media (min-width: 768px) {
+  .mobile-nav {
+    display: none;
+  }
+}
+
+/* Add bottom padding to main content when mobile nav is visible */
+@media (max-width: 767px) {
+  .mobile-nav-padding {
+    padding-bottom: 80px;
+  }
+}
