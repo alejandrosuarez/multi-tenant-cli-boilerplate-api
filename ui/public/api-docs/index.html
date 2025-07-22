@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-tenant CLI Boilerplate API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css">
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        
+        *,
+        *:before,
+        *:after {
+            box-sizing: inherit;
+        }
+        
+        body {
+            margin: 0;
+            background: #fafafa;
+        }
+        
+        .topbar {
+            display: none;
+        }
+        
+        .swagger-ui .info .title {
+            font-size: 2.5em;
+        }
+        
+        .swagger-ui .scheme-container {
+            padding: 15px 0;
+        }
+        
+        .swagger-ui .btn.authorize {
+            background-color: #3b82f6;
+            color: #fff;
+            border-color: #3b82f6;
+        }
+        
+        .swagger-ui .btn.authorize svg {
+            fill: #fff;
+        }
+        
+        .swagger-ui .opblock.opblock-post {
+            background: rgba(73, 204, 144, 0.1);
+            border-color: #49cc90;
+        }
+        
+        .swagger-ui .opblock.opblock-get {
+            background: rgba(97, 175, 254, 0.1);
+            border-color: #61affe;
+        }
+        
+        .swagger-ui .opblock.opblock-put {
+            background: rgba(252, 161, 48, 0.1);
+            border-color: #fca130;
+        }
+        
+        .swagger-ui .opblock.opblock-delete {
+            background: rgba(249, 62, 62, 0.1);
+            border-color: #f93e3e;
+        }
+        
+        .swagger-ui .opblock.opblock-patch {
+            background: rgba(80, 227, 194, 0.1);
+            border-color: #50e3c2;
+        }
+        
+        .swagger-ui .opblock-tag {
+            font-size: 1.2em;
+        }
+        
+        .swagger-ui .opblock-tag:hover {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        
+        .swagger-ui .opblock-summary-method {
+            font-weight: 700;
+        }
+        
+        .swagger-ui .opblock-summary-path {
+            font-family: monospace;
+            font-weight: 600;
+        }
+        
+        .swagger-ui .parameter__name {
+            font-family: monospace;
+        }
+        
+        .swagger-ui .parameter__type {
+            font-family: monospace;
+            color: #6b7280;
+        }
+        
+        .swagger-ui .response-col_status {
+            font-family: monospace;
+        }
+        
+        .swagger-ui .response-col_description__inner p {
+            font-size: 0.9em;
+        }
+        
+        .swagger-ui .responses-inner h4 {
+            font-size: 1.1em;
+        }
+        
+        .swagger-ui .btn {
+            transition: all 0.3s;
+        }
+        
+        .swagger-ui .btn:hover {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .swagger-ui .try-out__btn {
+            background-color: #3b82f6;
+            color: #fff;
+        }
+        
+        .swagger-ui .try-out__btn:hover {
+            background-color: #2563eb;
+        }
+        
+        .swagger-ui .execute {
+            background-color: #10b981;
+            color: #fff;
+            border-color: #10b981;
+        }
+        
+        .swagger-ui .execute:hover {
+            background-color: #059669;
+        }
+        
+        .swagger-ui .btn-clear {
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        
+        .swagger-ui .btn-clear:hover {
+            background-color: #e5e7eb;
+        }
+        
+        .swagger-ui .markdown p {
+            font-size: 0.9em;
+        }
+        
+        .swagger-ui .markdown code {
+            background: #f3f4f6;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .swagger-ui .model-box {
+            background: #f9fafb;
+        }
+        
+        .swagger-ui .model {
+            font-family: monospace;
+        }
+        
+        .swagger-ui .model-title {
+            font-family: sans-serif;
+        }
+        
+        .swagger-ui .response-col_links {
+            display: none;
+        }
+        
+        .swagger-ui .info {
+            margin: 20px 0;
+        }
+        
+        .swagger-ui .info hgroup.main {
+            margin-bottom: 20px;
+        }
+        
+        .swagger-ui .info .title small {
+            background-color: #3b82f6;
+        }
+        
+        .swagger-ui .info .title small.version-stamp {
+            background-color: #10b981;
+        }
+        
+        .swagger-ui .info .title small pre {
+            font-family: monospace;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            // Load OpenAPI spec from our JSON file
+            fetch('/api-docs/openapi.json')
+                .then(response => response.json())
+                .then(spec => {
+                    // Initialize Swagger UI
+                    const ui = SwaggerUIBundle({
+                        spec: spec,
+                        dom_id: '#swagger-ui',
+                        deepLinking: true,
+                        presets: [
+                            SwaggerUIBundle.presets.apis,
+                            SwaggerUIStandalonePreset
+                        ],
+                        plugins: [
+                            SwaggerUIBundle.plugins.DownloadUrl
+                        ],
+                        layout: "StandaloneLayout",
+                        docExpansion: "list",
+                        defaultModelsExpandDepth: 1,
+                        defaultModelExpandDepth: 1,
+                        displayRequestDuration: true,
+                        filter: true,
+                        persistAuthorization: true,
+                        tryItOutEnabled: true
+                    });
+                    
+                    window.ui = ui;
+                })
+                .catch(error => {
+                    console.error("Error loading OpenAPI spec:", error);
+                    document.getElementById('swagger-ui').innerHTML = `
+                        <div style="padding: 20px; text-align: center;">
+                            <h2>Error Loading API Documentation</h2>
+                            <p>Could not load the OpenAPI specification. Please make sure the server is running.</p>
+                            <p>Error details: ${error.message}</p>
+                        </div>
+                    `;
+                });
+        };
+    </script>
+</body>
+</html>

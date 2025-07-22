@@ -8,7 +8,9 @@
     "start": "node src/index.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "setup-api-docs": "node src/swagger/setup-api-docs.js",
+    "update-docs": "node scripts/generate-api-docs.js"
   },
   "keywords": [
     "multi-tenant",
@@ -21,9 +23,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-"@fastify/cors": "8.5.0",
+    "@fastify/cors": "8.5.0",
     "@fastify/multipart": "^7.6.0",
     "@fastify/static": "^6.12.0",
+    "@fastify/swagger": "^7.6.1",
+    "@fastify/swagger-ui": "^1.10.2",
     "@sentry/node": "^7.81.1",
     "@supabase/supabase-js": "^2.38.4",
     "axios": "^1.10.0",

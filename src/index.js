@@ -34,6 +34,11 @@ fastify.register(require('@fastify/static'), {
   decorateReply: false // disable decorateReply to avoid conflicts
 });
 
+// API documentation is served via static files
+console.log('📚 API Documentation available at:');
+console.log('- Local: http://localhost:3000/api-docs');
+console.log('- Production: https://multi-tenant-cli-boilerplate-api.vercel.app/api-docs');
+
 // Load environment variables
 require('dotenv').config({ path: '.env.local' });
 
@@ -74,6 +79,16 @@ const notificationService = new NotificationService(db);
 setInterval(() => {
   otpService.cleanupExpired();
 }, 5 * 60 * 1000);
+
+// Root path redirect to API documentation
+fastify.get('/', async (request, reply) => {
+  return reply.redirect('/api-docs-landing.html');
+});
+
+// API docs endpoint
+fastify.get('/api-docs', async (request, reply) => {
+  return reply.redirect('/api-docs/index.html');
+});
 
 // Health check endpoint
 fastify.get('/health', async (request, reply) => {
@@ -1602,8 +1617,8 @@ fastify.post('/api/request-attribute', {
   }
 });
 
-// Root endpoint
-fastify.get('/', async (request, reply) => {
+// API info endpoint
+fastify.get('/api/info', async (request, reply) => {
   return {
     name: 'Multi-Tenant CLI Boilerplate API',
     version: '1.0.0',
@@ -1615,7 +1630,7 @@ fastify.get('/', async (request, reply) => {
       entities: '/api/entities',
       auth: '/api/auth/*',
       notifications: '/api/notifications/*',
-      docs: 'https://github.com/your-repo/docs'
+      docs: '/api-docs'
     }
   };
 });
