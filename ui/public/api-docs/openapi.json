@@ -46,6 +46,10 @@
     {
       "name": "System",
       "description": "System health and utilities"
+    },
+    {
+      "name": "Attributes",
+      "description": "Entity attribute management and requests"
     }
   ],
   "components": {
@@ -69,7 +73,9 @@
       },
       "OTPRequest": {
         "type": "object",
-        "required": ["email"],
+        "required": [
+          "email"
+        ],
         "properties": {
           "email": {
             "type": "string",
@@ -85,7 +91,10 @@
       },
       "OTPVerifyRequest": {
         "type": "object",
-        "required": ["email", "otp"],
+        "required": [
+          "email",
+          "otp"
+        ],
         "properties": {
           "email": {
             "type": "string",
@@ -191,7 +200,10 @@
       },
       "EntityCreate": {
         "type": "object",
-        "required": ["name", "category"],
+        "required": [
+          "name",
+          "category"
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -334,33 +346,57 @@
                     "thumbnail": {
                       "type": "object",
                       "properties": {
-                        "url": { "type": "string" },
-                        "path": { "type": "string" },
-                        "size": { "type": "integer" }
+                        "url": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        }
                       }
                     },
                     "small": {
                       "type": "object",
                       "properties": {
-                        "url": { "type": "string" },
-                        "path": { "type": "string" },
-                        "size": { "type": "integer" }
+                        "url": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        }
                       }
                     },
                     "medium": {
                       "type": "object",
                       "properties": {
-                        "url": { "type": "string" },
-                        "path": { "type": "string" },
-                        "size": { "type": "integer" }
+                        "url": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        }
                       }
                     },
                     "large": {
                       "type": "object",
                       "properties": {
-                        "url": { "type": "string" },
-                        "path": { "type": "string" },
-                        "size": { "type": "integer" }
+                        "url": {
+                          "type": "string"
+                        },
+                        "path": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        }
                       }
                     }
                   }
@@ -368,12 +404,25 @@
                 "metadata": {
                   "type": "object",
                   "properties": {
-                    "originalName": { "type": "string" },
-                    "label": { "type": "string" },
-                    "entityId": { "type": "string" },
-                    "tenantId": { "type": "string" },
-                    "uploadedBy": { "type": "string" },
-                    "createdAt": { "type": "string", "format": "date-time" }
+                    "originalName": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "entityId": {
+                      "type": "string"
+                    },
+                    "tenantId": {
+                      "type": "string"
+                    },
+                    "uploadedBy": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
                   }
                 }
               }
@@ -393,25 +442,44 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "string" },
-                "originalName": { "type": "string" },
-                "label": { "type": "string" },
-                "url": { "type": "string" },
+                "id": {
+                  "type": "string"
+                },
+                "originalName": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
                 "availableSizes": {
                   "type": "array",
-                  "items": { "type": "string" }
+                  "items": {
+                    "type": "string"
+                  }
                 },
                 "urls": {
                   "type": "object",
                   "additionalProperties": true
                 },
-                "uploadedBy": { "type": "string" },
-                "createdAt": { "type": "string", "format": "date-time" }
+                "uploadedBy": {
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
               }
             }
           },
-          "requestedSize": { "type": "string" },
-          "totalImages": { "type": "integer" }
+          "requestedSize": {
+            "type": "string"
+          },
+          "totalImages": {
+            "type": "integer"
+          }
         }
       },
       "CategoryList": {
@@ -422,40 +490,76 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": { "type": "string" },
-                "name": { "type": "string" },
-                "display_name": { "type": "string" },
-                "description": { "type": "string" },
-                "base_schema": { "type": "object" },
-                "active": { "type": "boolean" },
-                "created_at": { "type": "string", "format": "date-time" }
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "display_name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "base_schema": {
+                  "type": "object"
+                },
+                "active": {
+                  "type": "boolean"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
               }
             }
           },
-          "total": { "type": "integer" }
+          "total": {
+            "type": "integer"
+          }
         }
       },
       "HealthResponse": {
         "type": "object",
         "properties": {
-          "status": { "type": "string" },
-          "timestamp": { "type": "string", "format": "date-time" },
-          "version": { "type": "string" },
-          "environment": { "type": "string" },
+          "status": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string"
+          },
           "services": {
             "type": "object",
             "properties": {
-              "database": { "type": "string" },
-              "auth": { "type": "string" },
-              "notifications": { "type": "string" },
-              "images": { "type": "string" }
+              "database": {
+                "type": "string"
+              },
+              "auth": {
+                "type": "string"
+              },
+              "notifications": {
+                "type": "string"
+              },
+              "images": {
+                "type": "string"
+              }
             }
           }
         }
       },
       "DeviceSubscription": {
         "type": "object",
-        "required": ["deviceToken"],
+        "required": [
+          "deviceToken"
+        ],
         "properties": {
           "deviceToken": {
             "type": "string",
@@ -470,7 +574,11 @@
       },
       "NotificationSend": {
         "type": "object",
-        "required": ["userId", "eventType", "message"],
+        "required": [
+          "userId",
+          "eventType",
+          "message"
+        ],
         "properties": {
           "userId": {
             "type": "string",
@@ -502,7 +610,10 @@
       },
       "ChatRequest": {
         "type": "object",
-        "required": ["entityId", "chatUrl"],
+        "required": [
+          "entityId",
+          "chatUrl"
+        ],
         "properties": {
           "entityId": {
             "type": "string",
@@ -516,22 +627,34 @@
       },
       "NotificationPreferences": {
         "type": "object",
-        "required": ["preferences"],
+        "required": [
+          "preferences"
+        ],
         "properties": {
           "preferences": {
             "type": "object",
             "properties": {
-              "chat_requests": { "type": "boolean" },
-              "attribute_updates": { "type": "boolean" },
-              "reminders": { "type": "boolean" },
-              "marketing": { "type": "boolean" }
+              "chat_requests": {
+                "type": "boolean"
+              },
+              "attribute_updates": {
+                "type": "boolean"
+              },
+              "reminders": {
+                "type": "boolean"
+              },
+              "marketing": {
+                "type": "boolean"
+              }
             }
           }
         }
       },
       "InteractionLog": {
         "type": "object",
-        "required": ["eventType"],
+        "required": [
+          "eventType"
+        ],
         "properties": {
           "eventType": {
             "type": "string",
@@ -547,13 +670,55 @@
             "additionalProperties": true
           }
         }
+      },
+      "AttributeRequest": {
+        "type": "object",
+        "required": [
+          "attribute",
+          "entityId"
+        ],
+        "properties": {
+          "attribute": {
+            "type": "string",
+            "description": "Name of the attribute to request information about"
+          },
+          "entityId": {
+            "type": "string",
+            "description": "ID of the entity the attribute belongs to"
+          },
+          "message": {
+            "type": "string",
+            "description": "Optional message to the entity owner explaining the request"
+          }
+        }
+      },
+      "AttributeRequestResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
       }
     }
   },
   "paths": {
     "/health": {
       "get": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "System health check",
         "description": "Get system status and service health",
         "responses": {
@@ -572,7 +737,9 @@
     },
     "/api/auth/send-otp": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Send OTP",
         "description": "Send a one-time password to user's email for authentication",
         "requestBody": {
@@ -619,7 +786,9 @@
     },
     "/api/auth/verify-otp": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Verify OTP & Login",
         "description": "Verify OTP code and receive a persistent authentication token",
         "requestBody": {
@@ -667,7 +836,9 @@
     },
     "/api/auth/me": {
       "get": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Get Current User",
         "description": "Get information about the currently authenticated user",
         "security": [
@@ -701,7 +872,9 @@
     },
     "/api/auth/logout": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Logout",
         "description": "Invalidate the current authentication token",
         "security": [
@@ -735,7 +908,9 @@
     },
     "/api/entities": {
       "get": {
-        "tags": ["Entities"],
+        "tags": [
+          "Entities"
+        ],
         "summary": "List Entities",
         "description": "Get a paginated list of entities with optional filtering",
         "parameters": [
@@ -788,7 +963,9 @@
         }
       },
       "post": {
-        "tags": ["Entities"],
+        "tags": [
+          "Entities"
+        ],
         "summary": "Create Entity",
         "description": "Create a new entity (requires authentication)",
         "security": [
@@ -872,7 +1049,9 @@
     },
     "/api/entities/{id}": {
       "get": {
-        "tags": ["Entities"],
+        "tags": [
+          "Entities"
+        ],
         "summary": "Get Entity by ID",
         "description": "Retrieve a specific entity by its ID",
         "parameters": [
@@ -915,7 +1094,9 @@
         }
       },
       "patch": {
-        "tags": ["Entities"],
+        "tags": [
+          "Entities"
+        ],
         "summary": "Update Entity",
         "description": "Update an existing entity (requires authentication and ownership)",
         "parameters": [
@@ -999,7 +1180,9 @@
         }
       },
       "delete": {
-        "tags": ["Entities"],
+        "tags": [
+          "Entities"
+        ],
         "summary": "Delete Entity",
         "description": "Soft delete an entity (requires authentication and ownership)",
         "parameters": [
@@ -1059,7 +1242,9 @@
     },
     "/api/entities/{id}/images": {
       "post": {
-        "tags": ["Images"],
+        "tags": [
+          "Images"
+        ],
         "summary": "Upload Images to Entity",
         "description": "Upload and automatically optimize images for an entity. Only entity owners can upload images.",
         "parameters": [
@@ -1160,7 +1345,9 @@
         }
       },
       "get": {
-        "tags": ["Images"],
+        "tags": [
+          "Images"
+        ],
         "summary": "Get Entity Images",
         "description": "Retrieve all images for a specific entity",
         "parameters": [
@@ -1179,7 +1366,12 @@
             "description": "Image size to return",
             "schema": {
               "type": "string",
-              "enum": ["thumbnail", "small", "medium", "large"],
+              "enum": [
+                "thumbnail",
+                "small",
+                "medium",
+                "large"
+              ],
               "default": "medium"
             }
           }
@@ -1215,7 +1407,9 @@
     },
     "/api/images/{id}": {
       "delete": {
-        "tags": ["Images"],
+        "tags": [
+          "Images"
+        ],
         "summary": "Delete Image",
         "description": "Remove an image and all its optimized versions. Only the user who uploaded the image can delete it.",
         "parameters": [
@@ -1285,7 +1479,9 @@
     },
     "/api/entities/search": {
       "get": {
-        "tags": ["Search"],
+        "tags": [
+          "Search"
+        ],
         "summary": "Advanced Entity Search",
         "description": "Search entities with enhanced filtering, sorting, and optional image inclusion",
         "parameters": [
@@ -1338,7 +1534,10 @@
             "description": "Sort order",
             "schema": {
               "type": "string",
-              "enum": ["asc", "desc"],
+              "enum": [
+                "asc",
+                "desc"
+              ],
               "default": "desc"
             }
           },
@@ -1368,7 +1567,9 @@
     },
     "/api/categories": {
       "get": {
-        "tags": ["Entities"],
+        "tags": [
+          "Entities"
+        ],
         "summary": "Get Available Categories",
         "description": "List all available entity categories",
         "responses": {
@@ -1387,7 +1588,9 @@
     },
     "/api/categories/{category}/entities": {
       "get": {
-        "tags": ["Entities"],
+        "tags": [
+          "Entities"
+        ],
         "summary": "Get Entities by Category",
         "description": "Get all entities in a specific category with optional images",
         "parameters": [
@@ -1444,7 +1647,9 @@
     },
     "/api/my/entities": {
       "get": {
-        "tags": ["Entities"],
+        "tags": [
+          "Entities"
+        ],
         "summary": "Get My Entities",
         "description": "Get entities owned by the authenticated user",
         "security": [
@@ -1498,7 +1703,9 @@
     },
     "/api/shared/{shareToken}": {
       "get": {
-        "tags": ["Entities"],
+        "tags": [
+          "Entities"
+        ],
         "summary": "Get Shared Entity",
         "description": "Access a publicly shared entity using its share token",
         "parameters": [
@@ -1538,7 +1745,9 @@
     },
     "/api/notifications/subscribe-device": {
       "post": {
-        "tags": ["Notifications"],
+        "tags": [
+          "Notifications"
+        ],
         "summary": "Subscribe Device",
         "description": "Subscribe a device for push notifications (supports both anonymous and authenticated users)",
         "security": [
@@ -1572,20 +1781,39 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "id": { "type": "string" },
-                        "device_token": { "type": "string" },
-                        "user_id": { "type": "string" },
-                        "tenant_context": { "type": "string" },
-                        "is_active": { "type": "boolean" },
-                        "created_at": { "type": "string", "format": "date-time" }
+                        "id": {
+                          "type": "string"
+                        },
+                        "device_token": {
+                          "type": "string"
+                        },
+                        "user_id": {
+                          "type": "string"
+                        },
+                        "tenant_context": {
+                          "type": "string"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
                       }
                     },
-                    "action": { "type": "string" }
+                    "action": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -1606,7 +1834,9 @@
     },
     "/api/notifications/merge-device": {
       "post": {
-        "tags": ["Notifications"],
+        "tags": [
+          "Notifications"
+        ],
         "summary": "Merge Device Subscription",
         "description": "Merge anonymous device subscription when user logs in",
         "security": [
@@ -1620,7 +1850,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["deviceToken"],
+                "required": [
+                  "deviceToken"
+                ],
                 "properties": {
                   "deviceToken": {
                     "type": "string",
@@ -1646,20 +1878,16 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" },
-                    "merged": { "type": "boolean" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "merged": {
+                      "type": "boolean"
+                    }
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -1673,13 +1901,25 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
     },
     "/api/notifications/send": {
       "post": {
-        "tags": ["Notifications"],
+        "tags": [
+          "Notifications"
+        ],
         "summary": "Send Notification",
         "description": "Send any type of notification to a user",
         "security": [
@@ -1720,20 +1960,39 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "id": { "type": "string" },
-                        "user_id": { "type": "string" },
-                        "event_type": { "type": "string" },
-                        "message": { "type": "string" },
-                        "link": { "type": "string" },
-                        "timestamp": { "type": "string", "format": "date-time" }
+                        "id": {
+                          "type": "string"
+                        },
+                        "user_id": {
+                          "type": "string"
+                        },
+                        "event_type": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "link": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
                       }
                     },
-                    "pushSent": { "type": "boolean" }
+                    "pushSent": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
@@ -1754,7 +2013,9 @@
     },
     "/api/notifications/chat-request": {
       "post": {
-        "tags": ["Notifications"],
+        "tags": [
+          "Notifications"
+        ],
         "summary": "Chat Request Notification",
         "description": "Specialized endpoint for chat requests to entity owners",
         "security": [
@@ -1788,19 +2049,35 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "id": { "type": "string" },
-                        "user_id": { "type": "string" },
-                        "event_type": { "type": "string" },
-                        "message": { "type": "string" },
-                        "link": { "type": "string" }
+                        "id": {
+                          "type": "string"
+                        },
+                        "user_id": {
+                          "type": "string"
+                        },
+                        "event_type": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "link": {
+                          "type": "string"
+                        }
                       }
                     },
-                    "pushSent": { "type": "boolean" }
+                    "pushSent": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
@@ -1821,7 +2098,9 @@
     },
     "/api/notifications/preferences": {
       "get": {
-        "tags": ["Notifications"],
+        "tags": [
+          "Notifications"
+        ],
         "summary": "Get Notification Preferences",
         "description": "Get user's notification preferences",
         "security": [
@@ -1837,17 +2116,29 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
+                    "success": {
+                      "type": "boolean"
+                    },
                     "preferences": {
                       "type": "object",
                       "properties": {
-                        "chat_requests": { "type": "boolean" },
-                        "attribute_updates": { "type": "boolean" },
-                        "reminders": { "type": "boolean" },
-                        "marketing": { "type": "boolean" }
+                        "chat_requests": {
+                          "type": "boolean"
+                        },
+                        "attribute_updates": {
+                          "type": "boolean"
+                        },
+                        "reminders": {
+                          "type": "boolean"
+                        },
+                        "marketing": {
+                          "type": "boolean"
+                        }
                       }
                     },
-                    "userId": { "type": "string" }
+                    "userId": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -1866,7 +2157,9 @@
         }
       },
       "post": {
-        "tags": ["Notifications"],
+        "tags": [
+          "Notifications"
+        ],
         "summary": "Update Notification Preferences",
         "description": "Update user's notification preferences",
         "security": [
@@ -1904,35 +2197,41 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "id": { "type": "string" },
-                        "user_id": { "type": "string" },
+                        "id": {
+                          "type": "string"
+                        },
+                        "user_id": {
+                          "type": "string"
+                        },
                         "preferences": {
                           "type": "object",
                           "properties": {
-                            "chat_requests": { "type": "boolean" },
-                            "attribute_updates": { "type": "boolean" },
-                            "reminders": { "type": "boolean" },
-                            "marketing": { "type": "boolean" }
+                            "chat_requests": {
+                              "type": "boolean"
+                            },
+                            "attribute_updates": {
+                              "type": "boolean"
+                            },
+                            "reminders": {
+                              "type": "boolean"
+                            },
+                            "marketing": {
+                              "type": "boolean"
+                            }
                           }
                         }
                       }
                     }
                   }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -1946,13 +2245,25 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
         }
       }
     },
     "/api/notifications/history": {
       "get": {
-        "tags": ["Notifications"],
+        "tags": [
+          "Notifications"
+        ],
         "summary": "Get Notification History",
         "description": "Get user's notification history with pagination",
         "security": [
@@ -1988,32 +2299,59 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
+                    "success": {
+                      "type": "boolean"
+                    },
                     "notifications": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "id": { "type": "string" },
-                          "event_type": { "type": "string" },
-                          "message": { "type": "string" },
-                          "link": { "type": "string" },
-                          "event_payload": { "type": "object" },
-                          "seen": { "type": "boolean" },
-                          "timestamp": { "type": "string", "format": "date-time" }
+                          "id": {
+                            "type": "string"
+                          },
+                          "event_type": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          },
+                          "link": {
+                            "type": "string"
+                          },
+                          "event_payload": {
+                            "type": "object"
+                          },
+                          "seen": {
+                            "type": "boolean"
+                          },
+                          "timestamp": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
                         }
                       }
                     },
                     "pagination": {
                       "type": "object",
                       "properties": {
-                        "page": { "type": "integer" },
-                        "limit": { "type": "integer" },
-                        "total": { "type": "integer" },
-                        "has_more": { "type": "boolean" }
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "total": {
+                          "type": "integer"
+                        },
+                        "has_more": {
+                          "type": "boolean"
+                        }
                       }
                     },
-                    "userId": { "type": "string" }
+                    "userId": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -2034,7 +2372,9 @@
     },
     "/api/notifications/{id}/seen": {
       "post": {
-        "tags": ["Notifications"],
+        "tags": [
+          "Notifications"
+        ],
         "summary": "Mark Notification as Seen",
         "description": "Mark a specific notification as seen",
         "parameters": [
@@ -2061,14 +2401,25 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "id": { "type": "string" },
-                        "seen": { "type": "boolean" },
-                        "updated_at": { "type": "string", "format": "date-time" }
+                        "id": {
+                          "type": "string"
+                        },
+                        "seen": {
+                          "type": "boolean"
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
                       }
                     }
                   }
@@ -2101,7 +2452,9 @@
     },
     "/api/notifications/test": {
       "post": {
-        "tags": ["Notifications"],
+        "tags": [
+          "Notifications"
+        ],
         "summary": "Test Notification",
         "description": "Send a test notification to the authenticated user",
         "security": [
@@ -2117,18 +2470,33 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
                     "data": {
                       "type": "object",
                       "properties": {
-                        "id": { "type": "string" },
-                        "event_type": { "type": "string" },
-                        "message": { "type": "string" },
-                        "timestamp": { "type": "string", "format": "date-time" }
+                        "id": {
+                          "type": "string"
+                        },
+                        "event_type": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
                       }
                     },
-                    "pushSent": { "type": "boolean" }
+                    "pushSent": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
@@ -2149,7 +2517,9 @@
     },
     "/api/interaction_logs": {
       "post": {
-        "tags": ["System"],
+        "tags": [
+          "System"
+        ],
         "summary": "Log Interaction",
         "description": "Manually log an interaction event",
         "security": [
@@ -2187,9 +2557,16 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "success": { "type": "boolean" },
-                    "message": { "type": "string" },
-                    "logged_at": { "type": "string", "format": "date-time" }
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "logged_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
                   }
                 }
               }
@@ -2197,6 +2574,81 @@
           },
           "400": {
             "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/request-attribute": {
+      "post": {
+        "tags": [
+          "Attributes"
+        ],
+        "summary": "Request Attribute Information",
+        "description": "Request more information about a specific attribute from the entity owner. This will send a notification to the entity owner.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttributeRequest"
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "attribute": "price",
+                    "entityId": "42e32a88-9ea4-4e66-a683-fcb8076da673",
+                    "message": "I'm interested in this property and would like to know the current asking price."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Attribute information request sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttributeRequestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entity not found",
             "content": {
               "application/json": {
                 "schema": {

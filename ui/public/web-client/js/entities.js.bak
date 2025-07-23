@@ -1,0 +1,76 @@
+/**
+ * Toggle full screen image view
+ */
+toggleFullScreenImage: function() {
+    const mainImage = document.getElementById('galleryMainImage');
+    
+    if (mainImage.classList.contains('zoomed')) {
+        // Exit full screen
+        mainImage.classList.remove('zoomed');
+        
+        // Re-enable scrolling
+        document.body.style.overflow = 'auto';
+        
+        // Add event listener for ESC key
+        document.removeEventListener('keydown', this.handleFullScreenKeyPress);
+        
+        // Remove click event to exit full screen
+        mainImage.removeEventListener('click', this.exitFullScreen);
+    } else {
+        // Enter full screen
+        mainImage.classList.add('zoomed');
+        
+        // Disable scrolling
+        document.body.style.overflow = 'hidden';
+        
+        // Add event listener for ESC key
+        document.addEventListener('keydown', this.handleFullScreenKeyPress);
+        
+        // Add click event to exit full screen
+        mainImage.addEventListener('click', this.exitFullScreen);
+    }
+},
+
+/**
+ * Handle key press in full screen mode
+ * @param {KeyboardEvent} e - Keyboard event
+ */
+handleFullScreenKeyPress: function(e) {
+    if (e.key === 'Escape') {
+        const mainImage = document.getElementById('galleryMainImage');
+        if (mainImage && mainImage.classList.contains('zoomed')) {
+            mainImage.classList.remove('zoomed');
+            document.body.style.overflow = 'auto';
+        }
+    } else if (e.key === 'ArrowLeft') {
+        // Previous image
+        Entities.galleryNavigate('prev');
+    } else if (e.key === 'ArrowRight') {
+        // Next image
+        Entities.galleryNavigate('next');
+    }
+},
+
+/**
+ * Exit full screen mode
+ */
+exitFullScreen: function() {
+    const mainImage = document.getElementById('galleryMainImage');
+    if (mainImage && mainImage.classList.contains('zoomed')) {
+        mainImage.classList.remove('zoomed');
+        document.body.style.overflow = 'auto';
+    }
+},
+
+/**
+ * Preload images to avoid UI cutting
+ * @param {Array} images - Array of image objects
+ */
+preloadImages: function(images) {
+    if (!images || !images.length) return;
+    
+    images.forEach(img => {
+        const preloadImg = new Image();
+        preloadImg.src = img.url;
+    });
+}

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Client</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/entity-details.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <h1>API Client</h1>
+            </div>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <span id="userEmail"></span>
+                <button id="logoutBtn" class="btn btn-text">Logout</button>
+            </div>
+        </header>
+
+        <main class="app-content">
+            <!-- Login Page -->
+            <section id="loginPage" class="page">
+                <div class="auth-container">
+                    <h2>Login</h2>
+                    <div class="auth-form">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" placeholder="Enter your email">
+                        </div>
+                        <button id="requestOtpBtn" class="btn btn-primary">Request OTP</button>
+                        
+                        <div id="otpSection" class="form-group" style="display: none;">
+                            <label for="otp">One-Time Password</label>
+                            <input type="text" id="otp" placeholder="Enter OTP">
+                            <div class="otp-timer" id="otpTimer"></div>
+                            <button id="verifyOtpBtn" class="btn btn-primary">Verify OTP</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard Page -->
+            <section id="dashboardPage" class="page" style="display: none;">
+                <div class="dashboard-header">
+                    <h2>Entities</h2>
+                    <button id="createEntityBtn" class="btn btn-primary">Create New Entity</button>
+                </div>
+
+                <div class="search-container">
+                    <div class="search-form">
+                        <div class="form-group">
+                            <input type="text" id="searchQuery" placeholder="Search...">
+                        </div>
+                        <div class="form-group">
+                            <select id="categoryFilter">
+                                <option value="">All Categories</option>
+                            </select>
+                        </div>
+                        <button id="searchBtn" class="btn btn-secondary">Search</button>
+                        <button id="advancedSearchBtn" class="btn btn-text">Advanced Search</button>
+                    </div>
+                </div>
+
+                <div class="entities-container">
+                    <div class="entities-list" id="entitiesList">
+                        <!-- Entities will be loaded here -->
+                        <div class="loading-spinner" id="entitiesLoading">Loading...</div>
+                    </div>
+                    <div class="pagination" id="entitiesPagination">
+                        <!-- Pagination controls will be added here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Entity Details Page -->
+            <section id="entityDetailsPage" class="page" style="display: none;">
+                <div class="details-header">
+                    <button id="backToDashboardBtn" class="btn btn-text">← Back to Dashboard</button>
+                    <div class="details-actions">
+                        <button id="editEntityBtn" class="btn btn-secondary">Edit</button>
+                        <button id="deleteEntityBtn" class="btn btn-danger">Delete</button>
+                    </div>
+                </div>
+
+                <div class="entity-details" id="entityDetails">
+                    <!-- Entity details will be loaded here -->
+                    <div class="loading-spinner" id="entityLoading">Loading...</div>
+                </div>
+
+                <div class="entity-images">
+                    <h3>Images</h3>
+                    <div class="image-upload-container">
+                        <form id="imageUploadForm">
+                            <input type="file" id="imageUpload" multiple accept="image/*">
+                            <label for="imageUpload" class="btn btn-secondary">Upload Images</label>
+                        </form>
+                    </div>
+                    <div class="image-gallery" id="imageGallery">
+                        <!-- Images will be loaded here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modal for creating/editing entities -->
+        <div class="modal" id="entityModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Create Entity</h3>
+                    <button id="closeModalBtn" class="btn-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="entityForm">
+                        <div class="form-group">
+                            <label for="entityName">Name</label>
+                            <input type="text" id="entityName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="entityCategory">Category</label>
+                            <select id="entityCategory" required>
+                                <!-- Categories will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="entityDescription">Description</label>
+                            <textarea id="entityDescription"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Public Shareable</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="entityPublicShareable" checked>
+                                <label for="entityPublicShareable"></label>
+                            </div>
+                        </div>
+                        <div id="dynamicAttributes">
+                            <!-- Dynamic attributes will be added here based on category -->
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <button type="button" id="cancelEntityBtn" class="btn btn-text">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for advanced search -->
+        <div class="modal" id="advancedSearchModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Advanced Search</h3>
+                    <button id="closeAdvancedSearchBtn" class="btn-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="advancedSearchForm">
+                        <div class="form-group">
+                            <label for="advSearchQuery">Search Query</label>
+                            <input type="text" id="advSearchQuery">
+                        </div>
+                        <div class="form-group">
+                            <label for="advSearchCategory">Category</label>
+                            <select id="advSearchCategory">
+                                <option value="">All Categories</option>
+                                <!-- Categories will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="advSearchSortBy">Sort By</label>
+                            <select id="advSearchSortBy">
+                                <option value="created_at">Created Date</option>
+                                <option value="updated_at">Updated Date</option>
+                                <option value="name">Name</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="advSearchSortOrder">Sort Order</label>
+                            <select id="advSearchSortOrder">
+                                <option value="desc">Descending</option>
+                                <option value="asc">Ascending</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Include Images</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="advSearchIncludeImages">
+                                <label for="advSearchIncludeImages"></label>
+                            </div>
+                        </div>
+                        <div id="advancedFilters">
+                            <!-- Dynamic filters will be added here -->
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                            <button type="button" id="resetAdvancedSearchBtn" class="btn btn-text">Reset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image viewer modal -->
+        <div class="modal" id="imageViewerModal">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h3>Image Viewer</h3>
+                    <button id="closeImageViewerBtn" class="btn-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="image-viewer">
+                        <button id="prevImageBtn" class="image-nav-btn">&lt;</button>
+                        <div class="image-container">
+                            <img id="currentImage" src="" alt="Image">
+                        </div>
+                        <button id="nextImageBtn" class="image-nav-btn">&gt;</button>
+                    </div>
+                    <div class="image-info">
+                        <p id="imageLabel"></p>
+                        <p id="imageUploadedBy"></p>
+                        <p id="imageCreatedAt"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- Toast notifications -->
+        <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/image-viewer.js"></script>
+    <script src="js/entities.js"></script>
+    <script src="js/entity-renderer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

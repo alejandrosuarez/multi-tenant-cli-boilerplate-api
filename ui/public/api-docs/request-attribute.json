@@ -1,0 +1,114 @@
+{
+  "AttributeRequest": {
+    "type": "object",
+    "required": ["attribute", "entityId"],
+    "properties": {
+      "attribute": {
+        "type": "string",
+        "description": "Name of the attribute to request information about"
+      },
+      "entityId": {
+        "type": "string",
+        "description": "ID of the entity the attribute belongs to"
+      },
+      "message": {
+        "type": "string",
+        "description": "Optional message to the entity owner explaining the request"
+      }
+    }
+  },
+  "AttributeRequestResponse": {
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean"
+      },
+      "message": {
+        "type": "string"
+      },
+      "requestId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time"
+      }
+    }
+  },
+  "path": {
+    "/api/request-attribute": {
+      "post": {
+        "tags": ["Attributes"],
+        "summary": "Request Attribute Information",
+        "description": "Request more information about a specific attribute from the entity owner. This will send a notification to the entity owner.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttributeRequest"
+              },
+              "examples": {
+                "default": {
+                  "value": {
+                    "attribute": "price",
+                    "entityId": "42e32a88-9ea4-4e66-a683-fcb8076da673",
+                    "message": "I'm interested in this property and would like to know the current asking price."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Attribute information request sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttributeRequestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Entity not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
