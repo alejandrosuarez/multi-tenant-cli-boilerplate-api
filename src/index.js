@@ -763,7 +763,14 @@ fastify.post('/api/auth/verify-otp', async (request, reply) => {
 
 // Logout endpoint
 fastify.post('/api/auth/logout', {
-  preHandler: auth.required.bind(auth)
+  preHandler: auth.required.bind(auth),
+  schema: {
+    body: {
+      type: 'object',
+      properties: {},
+      additionalProperties: false
+    }
+  }
 }, async (request, reply) => {
   try {
     const token = auth.extractToken(request);
@@ -1507,7 +1514,14 @@ fastify.get('/api/notifications/history', {
 
 // Mark notification as seen
 fastify.post('/api/notifications/:id/seen', {
-  preHandler: auth.required.bind(auth)
+  preHandler: auth.required.bind(auth),
+  schema: {
+    body: {
+      type: 'object',
+      properties: {},
+      additionalProperties: false
+    }
+  }
 }, async (request, reply) => {
   try {
     const notificationId = request.params.id;
@@ -1536,7 +1550,14 @@ fastify.post('/api/notifications/:id/seen', {
 
 // Test notification endpoint
 fastify.post('/api/notifications/test', {
-  preHandler: auth.required.bind(auth)
+  preHandler: auth.required.bind(auth),
+  schema: {
+    body: {
+      type: 'object',
+      properties: {},
+      additionalProperties: false
+    }
+  }
 }, async (request, reply) => {
   try {
     const userId = request.user.id;

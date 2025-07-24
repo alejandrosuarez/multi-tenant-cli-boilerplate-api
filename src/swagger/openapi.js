@@ -191,13 +191,13 @@ const openApiSchema = {
       },
       EntityCreate: {
         type: 'object',
-        required: ['name', 'category'],
+        required: ['name', 'entity_type'],
         properties: {
           name: {
             type: 'string',
             description: 'Entity name'
           },
-          category: {
+          entity_type: {
             type: 'string',
             description: 'Entity category/type'
           },
@@ -709,6 +709,18 @@ const openApiSchema = {
             bearerAuth: []
           }
         ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {},
+                example: {}
+              }
+            }
+          }
+        },
         responses: {
           '200': {
             description: 'Logged out successfully',
@@ -825,7 +837,7 @@ const openApiSchema = {
                 property: {
                   value: {
                     name: 'My Property',
-                    category: 'property',
+                    entity_type: 'property',
                     description: 'A beautiful house',
                     attributes: {
                       address: '456 Oak St',
@@ -839,7 +851,7 @@ const openApiSchema = {
                 vehicle: {
                   value: {
                     name: 'My Car',
-                    category: 'vehicle',
+                    entity_type: 'vehicle',
                     description: 'A reliable car',
                     attributes: {
                       make: 'Toyota',
@@ -2089,6 +2101,18 @@ const openApiSchema = {
             bearerAuth: []
           }
         ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {},
+                example: {}
+              }
+            }
+          }
+        },
         responses: {
           '200': {
             description: 'Notification marked as seen',
@@ -2145,6 +2169,18 @@ const openApiSchema = {
             bearerAuth: []
           }
         ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {},
+                example: {}
+              }
+            }
+          }
+        },
         responses: {
           '200': {
             description: 'Test notification sent successfully',
