@@ -46,10 +46,6 @@
     {
       "name": "System",
       "description": "System health and utilities"
-    },
-    {
-      "name": "Attributes",
-      "description": "Entity attribute management and requests"
     }
   ],
   "components": {
@@ -670,46 +666,6 @@
             "additionalProperties": true
           }
         }
-      },
-      "AttributeRequest": {
-        "type": "object",
-        "required": [
-          "attribute",
-          "entityId"
-        ],
-        "properties": {
-          "attribute": {
-            "type": "string",
-            "description": "Name of the attribute to request information about"
-          },
-          "entityId": {
-            "type": "string",
-            "description": "ID of the entity the attribute belongs to"
-          },
-          "message": {
-            "type": "string",
-            "description": "Optional message to the entity owner explaining the request"
-          }
-        }
-      },
-      "AttributeRequestResponse": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "requestId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
       }
     }
   },
@@ -947,6 +903,24 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "owner_id",
+            "in": "query",
+            "description": "Filter by entity owner ID (email address)",
+            "schema": {
+              "type": "string"
+            },
+            "example": "user@example.com"
+          },
+          {
+            "name": "exclude_id",
+            "in": "query",
+            "description": "Exclude a specific entity by ID",
+            "schema": {
+              "type": "string"
+            },
+            "example": "123e4567-e89b-12d3-a456-426614174000"
           }
         ],
         "responses": {
@@ -1549,6 +1523,24 @@
               "type": "boolean",
               "default": false
             }
+          },
+          {
+            "name": "owner_id",
+            "in": "query",
+            "description": "Filter by entity owner ID (email address)",
+            "schema": {
+              "type": "string"
+            },
+            "example": "user@example.com"
+          },
+          {
+            "name": "exclude_id",
+            "in": "query",
+            "description": "Exclude a specific entity by ID",
+            "schema": {
+              "type": "string"
+            },
+            "example": "123e4567-e89b-12d3-a456-426614174000"
           }
         ],
         "responses": {
@@ -2574,81 +2566,6 @@
           },
           "400": {
             "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/request-attribute": {
-      "post": {
-        "tags": [
-          "Attributes"
-        ],
-        "summary": "Request Attribute Information",
-        "description": "Request more information about a specific attribute from the entity owner. This will send a notification to the entity owner.",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AttributeRequest"
-              },
-              "examples": {
-                "default": {
-                  "value": {
-                    "attribute": "price",
-                    "entityId": "42e32a88-9ea4-4e66-a683-fcb8076da673",
-                    "message": "I'm interested in this property and would like to know the current asking price."
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Attribute information request sent successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AttributeRequestResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Entity not found",
             "content": {
               "application/json": {
                 "schema": {

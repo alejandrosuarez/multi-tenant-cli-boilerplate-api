@@ -243,10 +243,20 @@ class EntityService {
         query = query.eq('entity_type', filters.entity_type);
       }
 
+      // Apply owner_id filter
+      if (filters.owner_id) {
+        query = query.eq('owner_id', filters.owner_id);
+      }
+
+      // Apply exclude_id filter
+      if (filters.exclude_id) {
+        query = query.neq('id', filters.exclude_id);
+      }
+
 // Apply attribute filters
 for (const [key, value] of Object.entries(filters)) {
   // Skip system filters
-  if (['entity_type', 'page', 'limit', 'sort_by', 'sort_order', 'include_images', 'search_query', 'q', 'category'].includes(key)) {
+  if (['entity_type', 'page', 'limit', 'sort_by', 'sort_order', 'include_images', 'search_query', 'q', 'category', 'owner_id', 'exclude_id', 'tenant'].includes(key)) {
     continue;
   }
 

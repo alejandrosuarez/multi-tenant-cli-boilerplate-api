@@ -772,6 +772,24 @@ const openApiSchema = {
             schema: {
               type: 'string'
             }
+          },
+          {
+            name: 'owner_id',
+            in: 'query',
+            description: 'Filter by entity owner ID (email address)',
+            schema: {
+              type: 'string'
+            },
+            example: 'user@example.com'
+          },
+          {
+            name: 'exclude_id',
+            in: 'query',
+            description: 'Exclude a specific entity by ID',
+            schema: {
+              type: 'string'
+            },
+            example: '123e4567-e89b-12d3-a456-426614174000'
           }
         ],
         responses: {
@@ -1350,6 +1368,24 @@ const openApiSchema = {
               type: 'boolean',
               default: false
             }
+          },
+          {
+            name: 'owner_id',
+            in: 'query',
+            description: 'Filter by entity owner ID (email address)',
+            schema: {
+              type: 'string'
+            },
+            example: 'user@example.com'
+          },
+          {
+            name: 'exclude_id',
+            in: 'query',
+            description: 'Exclude a specific entity by ID',
+            schema: {
+              type: 'string'
+            },
+            example: '123e4567-e89b-12d3-a456-426614174000'
           }
         ],
         responses: {
