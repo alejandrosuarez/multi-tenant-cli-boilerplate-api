@@ -919,7 +919,7 @@ fastify.get('/api/entities/:id/logs', {
   }
 });
 
-// Manual log interaction endpoint
+// Manual log interaction endpoint (POST)
 fastify.post('/api/interaction_logs', {
   preHandler: auth.optional.bind(auth)
 }, async (request, reply) => {
@@ -950,6 +950,118 @@ fastify.post('/api/interaction_logs', {
       success: true,
       message: 'Interaction logged successfully',
       logged_at: new Date().toISOString()
+    };
+  } catch (error) {
+    reply.status(500);
+    return { error: error.message };
+  }
+});
+
+// Query interaction logs endpoint (GET)
+fastify.get('/api/interaction_logs', {
+  preHandler: auth.required.bind(auth)
+}, async (request, reply) => {
+  try {
+    const tenantId = auth.getTenantContext(request);
+    const { page = 1, limit = 50, eventType, entityId, start_date, end_date, ...customFilters } = request.query;
+    
+    // Validate pagination parameters
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit))); // Max 100, min 1
+    const offset = (pageNum - 1) * limitNum;
+    
+    // Build base query
+    let query = db.table('interactionLogs')
+      .select('*')
+      .eq('tenant_context', tenantId)
+      .order('timestamp', { ascending: false });
+    
+    // Apply system filters
+    const appliedFilters = {};
+    
+    if (eventType) {
+      query = query.eq('event_type', eventType);
+      appliedFilters.eventType = eventType;
+    }
+    
+    if (entityId) {
+      query = query.eq('entity_id', entityId);
+      appliedFilters.entityId = entityId;
+    }
+    
+    // Apply date range filters
+    if (start_date) {
+      query = query.gte('timestamp', start_date);
+      appliedFilters.start_date = start_date;
+    }
+    
+    if (end_date) {
+      query = query.lte('timestamp', end_date);
+      appliedFilters.end_date = end_date;
+    }
+    
+    // Apply custom event payload filters
+    for (const [key, value] of Object.entries(customFilters)) {
+      // Skip system parameters that might have been missed
+      if (['start_date', 'end_date'].includes(key)) {
+        continue;
+      }
+      
+      if (value && value !== '') {
+        // Filter by event_payload JSON field
+        query = query.contains('event_payload', { [key]: value });
+        appliedFilters[key] = value;
+      }
+    }
+    
+    // Apply pagination
+    query = query.range(offset, offset + limitNum - 1);
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      reply.status(500);
+      return { error: error.message };
+    }
+    
+    // Apply access control - users can see:
+    // 1. Their own logs (user_id matches)
+    // 2. Logs for entities they own (if entity_id is present)
+    let filteredLogs = [];
+    
+    if (data) {
+      for (const log of data) {
+        // User can see their own logs
+        if (log.user_id === request.user.id) {
+          filteredLogs.push(log);
+          continue;
+        }
+        
+        // If log has entity_id, check if user owns the entity
+        if (log.entity_id) {
+          try {
+            const entityResult = await entityService.getEntity(log.entity_id, request.user.id, tenantId);
+            if (entityResult.success && entityResult.data.owner_id === request.user.id) {
+              filteredLogs.push(log);
+            }
+          } catch (entityError) {
+            // Skip this log if entity check fails
+            continue;
+          }
+        }
+      }
+    }
+    
+    return {
+      success: true,
+      logs: filteredLogs,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: filteredLogs.length,
+        has_more: filteredLogs.length === limitNum
+      },
+      filters_applied: appliedFilters
     };
   } catch (error) {
     reply.status(500);
