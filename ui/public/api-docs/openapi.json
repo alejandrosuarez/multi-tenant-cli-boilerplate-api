@@ -2508,6 +2508,204 @@
       }
     },
     "/api/interaction_logs": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Query Interaction Logs",
+        "description": "Retrieve and filter interaction logs with pagination support",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "eventType",
+            "in": "query",
+            "description": "Filter by event type",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "entity_viewed"
+            }
+          },
+          {
+            "name": "entityId",
+            "in": "query",
+            "description": "Filter by entity ID (UUID format)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "123e4567-e89b-12d3-a456-426614174000"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "example": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of results per page (max 100)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "example": 20
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "Filter logs from this date onwards (ISO 8601 format)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-07-24"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "Filter logs up to this date (ISO 8601 format)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2025-07-25"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "description": "Filter by custom event payload field (example)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "manual"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Interaction logs retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "logs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "log-123"
+                          },
+                          "event_type": {
+                            "type": "string",
+                            "example": "entity_viewed"
+                          },
+                          "user_id": {
+                            "type": "string",
+                            "example": "user@example.com"
+                          },
+                          "tenant_context": {
+                            "type": "string",
+                            "example": "default"
+                          },
+                          "event_payload": {
+                            "type": "object",
+                            "example": {
+                              "source": "manual",
+                              "custom_data": "value"
+                            }
+                          },
+                          "entity_id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true
+                          },
+                          "timestamp": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "example": 50
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 25
+                        },
+                        "has_more": {
+                          "type": "boolean",
+                          "example": false
+                        }
+                      }
+                    },
+                    "filters_applied": {
+                      "type": "object",
+                      "example": {
+                        "eventType": "entity_viewed",
+                        "source": "manual"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "System"

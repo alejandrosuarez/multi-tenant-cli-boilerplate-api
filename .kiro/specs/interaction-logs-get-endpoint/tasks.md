@@ -63,7 +63,7 @@
   - Test date range filtering with different formats
   - _Requirements: All requirements - testing_
 
-- [ ] 10. Update API documentation
+- [x] 10. Update API documentation
   - Update OpenAPI specification to document the new GET method
   - Add parameter descriptions and examples for all supported filters
   - Document response format and error codes
