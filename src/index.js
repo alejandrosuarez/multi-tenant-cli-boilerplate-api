@@ -1,7 +1,25 @@
 const fastify = require('fastify')({ logger: true });
 const path = require('path');
-const fs = require('fs');
-const { pipeline } = require('stream/promises');
+
+// Load environment variables
+require('dotenv').config();
+
+// Import services and middleware
+const DatabaseService = require('./services/database');
+const EntityService = require('./services/entity');
+const ImageService = require('./services/image');
+const NotificationService = require('./services/notification');
+const OTPService = require('./services/otp');
+const AuthMiddleware = require('./middleware/auth');
+const registerSwagger = require('./swagger');
+
+// Initialize services
+const db = new DatabaseService();
+const entityService = new EntityService(db);
+const imageService = new ImageService(db);
+const notificationService = new NotificationService(db);
+const otpService = new OTPService(db);
+const auth = new AuthMiddleware();
 
 // Register CORS support
 fastify.register(require('@fastify/cors'), {
@@ -34,8 +52,8 @@ registerSwagger(fastify);
 
 // Health check endpoint
 fastify.get('/health', async (request, reply) => {
-  return { 
-    status: 'healthy', 
+  return {
+    status: 'healthy',
     timestamp: new Date().toISOString(),
     version: '1.0.0'
   };
@@ -44,13 +62,13 @@ fastify.get('/health', async (request, reply) => {
 // Authentication endpoints
 fastify.post('/api/auth/send-otp', async (request, reply) => {
   const { email, tenantId = 'default' } = request.body;
-  
+
   if (!email) {
     return reply.code(400).send({ success: false, error: 'Email is required' });
   }
 
   const result = await otpService.sendOTP(email, tenantId);
-  
+
   if (result.success) {
     return { success: true, message: 'OTP sent successfully' };
   } else {
@@ -60,22 +78,22 @@ fastify.post('/api/auth/send-otp', async (request, reply) => {
 
 fastify.post('/api/auth/verify-otp', async (request, reply) => {
   const { email, otp, tenantId = 'default' } = request.body;
-  
+
   if (!email || !otp) {
     return reply.code(400).send({ success: false, error: 'Email and OTP are required' });
   }
 
   const result = await otpService.verifyOTP(email, otp, tenantId);
-  
+
   if (result.success) {
     const token = auth.generatePersistentToken({
       email,
       tenantId,
       id: result.user.id
     });
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       token,
       user: result.user
     };
@@ -113,7 +131,7 @@ fastify.get('/api/categories', {
 }, async (request, reply) => {
   const tenantId = request.user?.tenant || 'default';
   const result = await db.getEntityCategories(tenantId);
-  
+
   if (result.success) {
     return { success: true, categories: result.data };
   } else {
@@ -127,8 +145,8 @@ fastify.get('/api/entities', {
 }, async (request, reply) => {
   const { page = 1, limit = 20, owner_id, exclude_id, tenant } = request.query;
   const tenantId = tenant || request.user?.tenant || 'default';
-  
-  const result = await entityService.getEntities({
+
+  const result = await entityService.getMyEntities({
     page: parseInt(page),
     limit: Math.min(parseInt(limit), 100),
     tenantId,
@@ -136,7 +154,7 @@ fastify.get('/api/entities', {
     ownerId: owner_id,
     excludeId: exclude_id
   });
-  
+
   if (result.success) {
     return result.data;
   } else {
@@ -152,7 +170,7 @@ fastify.post('/api/entities', {
     request.user.sub,
     request.user.tenant
   );
-  
+
   if (result.success) {
     return { success: true, ...result.data };
   } else {
@@ -169,7 +187,7 @@ fastify.get('/api/entities/:id', {
     request.user?.sub,
     request.user?.tenant
   );
-  
+
   if (result.success) {
     return { success: true, ...result.data };
   } else {
@@ -187,7 +205,7 @@ fastify.patch('/api/entities/:id', {
     request.user.sub,
     request.user.tenant
   );
-  
+
   if (result.success) {
     return { success: true, ...result.data };
   } else {
@@ -204,7 +222,7 @@ fastify.delete('/api/entities/:id', {
     request.user.sub,
     request.user.tenant
   );
-  
+
   if (result.success) {
     return { success: true, message: 'Entity deleted successfully' };
   } else {
@@ -218,7 +236,7 @@ fastify.get('/api/entities/search', {
 }, async (request, reply) => {
   const { q, category, page = 1, limit = 20, owner_id, exclude_id } = request.query;
   const tenantId = request.user?.tenant || 'default';
-  
+
   const result = await entityService.searchEntities({
     query: q,
     category,
@@ -229,7 +247,7 @@ fastify.get('/api/entities/search', {
     ownerId: owner_id,
     excludeId: exclude_id
   });
-  
+
   if (result.success) {
     return result.data;
   } else {
@@ -243,7 +261,7 @@ fastify.get('/api/categories/:category/entities', {
   const { category } = request.params;
   const { page = 1, limit = 20 } = request.query;
   const tenantId = request.user?.tenant || 'default';
-  
+
   const result = await entityService.getEntitiesByCategory({
     category,
     page: parseInt(page),
@@ -251,7 +269,7 @@ fastify.get('/api/categories/:category/entities', {
     tenantId,
     userId: request.user?.sub
   });
-  
+
   if (result.success) {
     return result.data;
   } else {
@@ -264,14 +282,14 @@ fastify.get('/api/my/entities', {
   preHandler: auth.required.bind(auth)
 }, async (request, reply) => {
   const { page = 1, limit = 20 } = request.query;
-  
-  const result = await entityService.getUserEntities({
+
+  const result = await entityService.getMyEntities({
     userId: request.user.sub,
     tenantId: request.user.tenant,
     page: parseInt(page),
     limit: Math.min(parseInt(limit), 100)
   });
-  
+
   if (result.success) {
     return result.data;
   } else {
@@ -284,7 +302,7 @@ fastify.post('/api/entities/:id/images', {
   preHandler: auth.required.bind(auth)
 }, async (request, reply) => {
   const { id } = request.params;
-  
+
   try {
     const data = await request.file();
     if (!data) {
@@ -297,7 +315,7 @@ fastify.post('/api/entities/:id/images', {
       request.user.sub,
       request.user.tenant
     );
-    
+
     if (result.success) {
       return { success: true, images: result.data };
     } else {
@@ -312,13 +330,13 @@ fastify.get('/api/entities/:id/images', {
   preHandler: auth.optional.bind(auth)
 }, async (request, reply) => {
   const { id } = request.params;
-  
+
   const result = await imageService.getEntityImages(
     id,
     request.user?.sub,
     request.user?.tenant
   );
-  
+
   if (result.success) {
     return { success: true, images: result.data };
   } else {
@@ -330,13 +348,13 @@ fastify.delete('/api/images/:id', {
   preHandler: auth.required.bind(auth)
 }, async (request, reply) => {
   const { id } = request.params;
-  
+
   const result = await imageService.deleteImage(
     id,
     request.user.sub,
     request.user.tenant
   );
-  
+
   if (result.success) {
     return { success: true, message: 'Image deleted successfully' };
   } else {
@@ -349,13 +367,13 @@ fastify.post('/api/notifications/subscribe-device', {
   preHandler: auth.required.bind(auth)
 }, async (request, reply) => {
   const { deviceToken, tenantContext } = request.body;
-  
+
   const result = await notificationService.subscribeDevice(
     request.user.sub,
     deviceToken,
     tenantContext || request.user.tenant
   );
-  
+
   if (result.success) {
     return { success: true, subscription: result.data };
   } else {
@@ -366,11 +384,11 @@ fastify.post('/api/notifications/subscribe-device', {
 fastify.get('/api/notifications/preferences', {
   preHandler: auth.required.bind(auth)
 }, async (request, reply) => {
-  const result = await notificationService.getPreferences(
+  const result = await notificationService.getUserPreferences(
     request.user.sub,
     request.user.tenant
   );
-  
+
   if (result.success) {
     return { success: true, preferences: result.data };
   } else {
@@ -381,12 +399,12 @@ fastify.get('/api/notifications/preferences', {
 fastify.post('/api/notifications/preferences', {
   preHandler: auth.required.bind(auth)
 }, async (request, reply) => {
-  const result = await notificationService.updatePreferences(
+  const result = await notificationService.updateUserPreferences(
     request.user.sub,
     request.user.tenant,
     request.body
   );
-  
+
   if (result.success) {
     return { success: true, preferences: result.data };
   } else {
@@ -408,7 +426,7 @@ fastify.post('/api/notifications/test', {
     request.user.sub,
     request.user.tenant
   );
-  
+
   if (result.success) {
     return { success: true, message: 'Test notification sent' };
   } else {
@@ -420,13 +438,13 @@ fastify.get('/api/notifications/history', {
   preHandler: auth.required.bind(auth)
 }, async (request, reply) => {
   const { page = 1, limit = 20 } = request.query;
-  
+
   const result = await notificationService.getNotificationHistory(
     request.user.sub,
     request.user.tenant,
     { page: parseInt(page), limit: Math.min(parseInt(limit), 100) }
   );
-  
+
   if (result.success) {
     return { success: true, notifications: result.data };
   } else {
@@ -445,13 +463,13 @@ fastify.post('/api/notifications/:id/seen', {
   }
 }, async (request, reply) => {
   const { id } = request.params;
-  
+
   const result = await notificationService.markAsSeen(
     id,
     request.user.sub,
     request.user.tenant
   );
-  
+
   if (result.success) {
     return { success: true, message: 'Notification marked as seen' };
   } else {
@@ -467,7 +485,7 @@ fastify.post('/api/notifications/send', {
     request.user.sub,
     request.user.tenant
   );
-  
+
   if (result.success) {
     return { success: true, notification: result.data };
   } else {
@@ -485,7 +503,7 @@ fastify.post('/api/interaction_logs', {
     request.user.tenant,
     request.body.eventPayload || {}
   );
-  
+
   if (result.success) {
     return { success: true, log: result.data };
   } else {
@@ -497,16 +515,16 @@ fastify.post('/api/interaction_logs', {
 fastify.get('/api/interaction_logs', {
   preHandler: auth.required.bind(auth)
 }, async (request, reply) => {
-  const { 
-    eventType, 
-    entityId, 
-    page = 1, 
-    limit = 50, 
-    start_date, 
+  const {
+    eventType,
+    entityId,
+    page = 1,
+    limit = 50,
+    start_date,
     end_date,
-    ...customFilters 
+    ...customFilters
   } = request.query;
-  
+
   const result = await db.getInteractionLogs({
     userId: request.user.sub,
     tenantId: request.user.tenant,
@@ -518,7 +536,7 @@ fastify.get('/api/interaction_logs', {
     page: parseInt(page),
     limit: Math.min(parseInt(limit), 100)
   });
-  
+
   if (result.success) {
     return {
       success: true,
@@ -534,9 +552,9 @@ fastify.get('/api/interaction_logs', {
 // Shared access endpoint
 fastify.get('/api/shared/:shareToken', async (request, reply) => {
   const { shareToken } = request.params;
-  
+
   const result = await entityService.getSharedEntity(shareToken);
-  
+
   if (result.success) {
     return { success: true, entity: result.data };
   } else {
@@ -549,9 +567,9 @@ const start = async () => {
   try {
     const port = process.env.PORT || 3000;
     const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
-    
+
     await fastify.listen({ port, host });
-    
+
     console.log(`🚀 Server running at http://${host}:${port}`);
     console.log(`📚 API Documentation: http://${host}:${port}/api-docs`);
   } catch (err) {
